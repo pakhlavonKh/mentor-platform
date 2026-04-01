@@ -1,0 +1,122 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 12%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 12%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 12%;
+
+    --primary: 350 65% 52%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 350 40% 96%;
+    --secondary-foreground: 350 40% 30%;
+
+    --muted: 350 20% 96%;
+    --muted-foreground: 0 0% 45%;
+
+    --accent: 350 50% 95%;
+    --accent-foreground: 350 60% 40%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 350 15% 91%;
+    --input: 350 15% 91%;
+    --ring: 350 65% 52%;
+
+    --radius: 0.75rem;
+
+    --rose-50: 350 50% 97%;
+    --rose-100: 350 45% 94%;
+    --rose-200: 350 40% 88%;
+    --rose-300: 350 50% 78%;
+    --rose-400: 350 60% 65%;
+    --rose-500: 350 65% 52%;
+    --rose-600: 350 70% 42%;
+
+    --warm-50: 30 30% 98%;
+    --warm-100: 30 25% 95%;
+
+    --font-display: 'Playfair Display', serif;
+    --font-body: 'Inter', sans-serif;
+
+    --gradient-hero: linear-gradient(135deg, hsl(350, 50%, 95%), hsl(350, 40%, 92%), hsl(30, 30%, 96%));
+    --gradient-primary: linear-gradient(135deg, hsl(350, 65%, 55%), hsl(350, 70%, 48%));
+    --gradient-card: linear-gradient(145deg, hsl(350, 50%, 97%), hsl(350, 35%, 94%));
+    --shadow-soft: 0 2px 15px -3px rgba(200, 80, 100, 0.08), 0 4px 6px -4px rgba(200, 80, 100, 0.05);
+    --shadow-hover: 0 8px 30px -5px rgba(200, 80, 100, 0.12), 0 6px 10px -6px rgba(200, 80, 100, 0.06);
+    --shadow-elevated: 0 20px 50px -12px rgba(200, 80, 100, 0.15);
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 350 65% 52%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 350 50% 95%;
+    --sidebar-accent-foreground: 350 60% 40%;
+    --sidebar-border: 350 15% 91%;
+    --sidebar-ring: 350 65% 52%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-body antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+  }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: var(--font-display);
+  }
+  .font-body {
+    font-family: var(--font-body);
+  }
+  .gradient-primary {
+    background: var(--gradient-primary);
+  }
+  .gradient-hero {
+    background: var(--gradient-hero);
+  }
+  .gradient-card {
+    background: var(--gradient-card);
+  }
+  .shadow-soft {
+    box-shadow: var(--shadow-soft);
+  }
+  .shadow-hover {
+    box-shadow: var(--shadow-hover);
+  }
+  .shadow-elevated {
+    box-shadow: var(--shadow-elevated);
+  }
+  .bg-rose-50 {
+    background-color: hsl(var(--rose-50));
+  }
+  .bg-rose-100 {
+    background-color: hsl(var(--rose-100));
+  }
+  .text-rose-500 {
+    color: hsl(var(--rose-500));
+  }
+  .text-rose-600 {
+    color: hsl(var(--rose-600));
+  }
+}
