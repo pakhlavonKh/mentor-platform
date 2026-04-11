@@ -1,19 +1,25 @@
 import { Link, useLocation } from "react-router-dom";
 import { useState } from "react";
-import { Menu, X, User, GlobeLock } from "lucide-react";
+import { Menu, X, User } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { LanguageSwitcher } from "./LanguageSwitcher";
+import { useAuth } from "@/context/AuthContext";
 
-const navItems = [
-  { label: "Home", path: "/" },
-  { label: "Grants", path: "/grants" },
-  { label: "Opportunities", path: "/telegram" },
-  { label: "Learning", path: "/learn" },
-  { label: "Pricing", path: "/pricing" },
+const NAV_ITEMS = [
+  { labelKey: "common.home", path: "/" },
+  { labelKey: "common.grants", path: "/grants" },
+  { labelKey: "common.telegram", path: "/telegram" },
+  { labelKey: "common.learning", path: "/learn" },
+  { labelKey: "common.pricing", path: "/pricing" },
 ];
 
 export function HeaderNav() {
   const location = useLocation();
+  const { t } = useTranslation();
+  const { isLoggedIn } = useAuth();
   const [open, setOpen] = useState(false);
 
   return (
@@ -22,53 +28,94 @@ export function HeaderNav() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2.5">
-            <div className="h-8 w-8 rounded-lg gradient-primary flex items-center justify-center">
-              <GlobeLock className="h-4 w-4 text-primary-foreground" />
-            </div>
-            <span className="font-display font-bold text-xl text-foreground tracking-tight">GrantPath</span>
+            <img
+              src="/logo.png"
+              alt="StudyQadam"
+              className="h-36 object-contain"
+            />
           </Link>
 
           {/* Desktop Nav */}
-          <nav className="hidden md:flex items-center gap-1">
-            {navItems.map((item) => (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={cn(
-                  "px-4 py-2 rounded-full text-sm font-medium transition-colors",
-                  location.pathname === item.path
-                    ? "bg-accent text-accent-foreground"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                )}
-              >
-                {item.label}
-              </Link>
-            ))}
+          <nav className="hidden md:flex items-center gap-1 relative">
+            {NAV_ITEMS.map((item) => {
+              const isActive = location.pathname === item.path;
+
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className="relative px-5 py-2 rounded-full text-sm font-medium"
+                >
+                  {/* Sliding background */}
+                  {isActive && (
+                    <motion.div
+                      layoutId="nav-pill"
+                      className="absolute inset-0 bg-accent/70 rounded-full backdrop-blur-sm"
+                      transition={{
+                        type: "spring",
+                        stiffness: 400,
+                        damping: 35,
+                        mass: 0.6,
+                      }}
+                    />
+                  )}
+
+                  {/* Text */}
+                  <span
+                    className={cn(
+                      "relative z-10 transition-colors",
+                      isActive
+                        ? "text-accent-foreground"
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    {t(item.labelKey)}
+                  </span>
+                </Link>
+              );
+            })}
           </nav>
 
           {/* Right side */}
-          <div className="hidden md:flex items-center gap-3">
-            <Link to="/profile">
-              <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground gap-2">
-                <User className="h-4 w-4" />
-                Account
-              </Button>
-            </Link>
-            <Button size="sm" className="gradient-primary text-primary-foreground rounded-full px-5 hover:opacity-90">
-              Sign In
-            </Button>
+          <div className="hidden md:flex items-center gap-4">
+            <LanguageSwitcher />
+
+            {isLoggedIn ? (
+              <Link to="/profile">
+                <Button
+                  size="sm"
+                  className="gradient-primary text-primary-foreground rounded-full px-5 hover:opacity-90 gap-2"
+                >
+                  <User className="h-4 w-4" />
+                  {t("common.profile")}
+                </Button>
+              </Link>
+            ) : (
+              <Link to="/login">
+                <Button
+                  size="sm"
+                  className="gradient-primary text-primary-foreground rounded-full px-5 hover:opacity-90"
+                >
+                  {t("common.login")}
+                </Button>
+              </Link>
+            )}
           </div>
 
           {/* Mobile toggle */}
           <button className="md:hidden p-2" onClick={() => setOpen(!open)}>
-            {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            {open ? (
+              <X className="h-5 w-5" />
+            ) : (
+              <Menu className="h-5 w-5" />
+            )}
           </button>
         </div>
 
         {/* Mobile Nav */}
         {open && (
           <div className="md:hidden pb-4 border-t border-border/50 pt-3 space-y-1">
-            {navItems.map((item) => (
+            {NAV_ITEMS.map((item) => (
               <Link
                 key={item.path}
                 to={item.path}
@@ -80,14 +127,43 @@ export function HeaderNav() {
                     : "text-muted-foreground hover:text-foreground hover:bg-muted"
                 )}
               >
-                {item.label}
+                {t(item.labelKey)}
               </Link>
             ))}
-            <div className="pt-2 px-4 flex gap-2">
-              <Link to="/profile" className="flex-1" onClick={() => setOpen(false)}>
-                <Button variant="outline" size="sm" className="w-full">Account</Button>
-              </Link>
-              <Button size="sm" className="flex-1 gradient-primary text-primary-foreground">Sign In</Button>
+
+            <div className="pt-2 px-4 space-y-2">
+              <div className="pb-2">
+                <LanguageSwitcher />
+              </div>
+
+              {isLoggedIn ? (
+                <Link
+                  to="/profile"
+                  className="w-full"
+                  onClick={() => setOpen(false)}
+                >
+                  <Button
+                    size="sm"
+                    className="w-full gradient-primary text-primary-foreground gap-2"
+                  >
+                    <User className="h-4 w-4" />
+                    {t("common.profile")}
+                  </Button>
+                </Link>
+              ) : (
+                <Link
+                  to="/login"
+                  className="w-full"
+                  onClick={() => setOpen(false)}
+                >
+                  <Button
+                    size="sm"
+                    className="w-full gradient-primary text-primary-foreground"
+                  >
+                    {t("common.login")}
+                  </Button>
+                </Link>
+              )}
             </div>
           </div>
         )}

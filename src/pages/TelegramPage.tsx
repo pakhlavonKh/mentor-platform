@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { PageLayout } from "@/components/PageLayout";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,15 +8,16 @@ import { ExternalLink, Send } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function TelegramPage() {
+  const { t } = useTranslation();
   return (
     <PageLayout>
       <div className="max-w-3xl mx-auto space-y-6">
         <div>
           <div className="flex items-center gap-2 mb-1">
             <Send className="h-5 w-5 text-primary" />
-            <h1 className="font-display text-3xl font-bold text-foreground">Opportunities Feed</h1>
+            <h1 className="font-display text-3xl font-bold text-foreground">{t("telegram.title")}</h1>
           </div>
-          <p className="text-muted-foreground">Latest scholarship news and opportunities.</p>
+          <p className="text-muted-foreground">{t("telegram.description")}</p>
         </div>
         <div className="space-y-4">
           {mockTelegramPosts.map((post, i) => (
@@ -30,7 +32,7 @@ export default function TelegramPage() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground leading-relaxed mb-4">{post.description}</p>
-                  <Button variant="outline" size="sm" className="rounded-full">Open Link <ExternalLink className="ml-1.5 h-3.5 w-3.5" /></Button>
+                  <Button variant="outline" size="sm" className="rounded-full">{t("telegram.openLink")} <ExternalLink className="ml-1.5 h-3.5 w-3.5" /></Button>
                 </CardContent>
               </Card>
             </motion.div>

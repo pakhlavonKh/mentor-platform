@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { PageLayout } from "@/components/PageLayout";
 import { LearningCard } from "@/components/LearningCard";
 import { mockLearning } from "@/data/mockData";
@@ -5,6 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { motion } from "framer-motion";
 
 export default function LearnPage() {
+  const { t } = useTranslation();
   const completed = mockLearning.filter((l) => l.completed).length;
   const progress = Math.round((completed / mockLearning.length) * 100);
   const topics = [...new Set(mockLearning.map((l) => l.topic))];
@@ -13,13 +15,13 @@ export default function LearnPage() {
     <PageLayout>
       <div className="max-w-5xl mx-auto space-y-8">
         <div>
-          <h1 className="font-display text-3xl font-bold text-foreground">Learning Center</h1>
-          <p className="text-muted-foreground mt-1">Master the art of scholarship applications.</p>
+          <h1 className="font-display text-3xl font-bold text-foreground">{t("learning.title")}</h1>
+          <p className="text-muted-foreground mt-1">{t("learning.description")}</p>
         </div>
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Overall Progress</span>
-            <span className="font-medium text-foreground">{completed}/{mockLearning.length} completed</span>
+            <span className="text-muted-foreground">{t("learning.overallProgress")}</span>
+            <span className="font-medium text-foreground">{completed}/{mockLearning.length} {t("learning.completed")}</span>
           </div>
           <Progress value={progress} className="h-2.5" />
         </div>

@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { PageLayout } from "@/components/PageLayout";
 import { GrantCard } from "@/components/GrantCard";
 import { mockGrants } from "@/data/mockData";
@@ -11,6 +12,7 @@ const countries = [...new Set(mockGrants.map((g) => g.country))];
 const types = ["bachelor", "master", "phd", "internship"] as const;
 
 export default function GrantsPage() {
+  const { t } = useTranslation();
   const [search, setSearch] = useState("");
   const [country, setCountry] = useState("all");
   const [type, setType] = useState("all");
@@ -35,17 +37,17 @@ export default function GrantsPage() {
     <PageLayout>
       <div className="max-w-6xl mx-auto space-y-6">
         <div>
-          <h1 className="font-display text-3xl font-bold text-foreground">Scholarships & Grants</h1>
-          <p className="text-muted-foreground mt-1">Find opportunities that match your profile.</p>
+          <h1 className="font-display text-3xl font-bold text-foreground">{t("grants.title")}</h1>
+          <p className="text-muted-foreground mt-1">{t("grants.description")}</p>
         </div>
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search grants..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 rounded-full" />
+            <Input placeholder={t("grants.searchPlaceholder")} value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 rounded-full" />
           </div>
           <Select value={country} onValueChange={setCountry}>
-            <SelectTrigger className="w-full sm:w-44 rounded-full"><SelectValue placeholder="Country" /></SelectTrigger>
-            <SelectContent>{[<SelectItem key="all" value="all">All Countries</SelectItem>, ...countries.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)]}</SelectContent>
+            <SelectTrigger className="w-full sm:w-44 rounded-full"><SelectValue placeholder={t("common.allCountries")} /></SelectTrigger>
+            <SelectContent>{[<SelectItem key="all" value="all">{t("common.allCountries")}</SelectItem>, ...countries.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)]}</SelectContent>
           </Select>
           <Select value={type} onValueChange={setType}>
             <SelectTrigger className="w-full sm:w-36 rounded-full"><SelectValue placeholder="Type" /></SelectTrigger>

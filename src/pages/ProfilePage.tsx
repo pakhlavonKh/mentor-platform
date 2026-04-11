@@ -1,3 +1,7 @@
+import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+import { useAuth } from "@/context/AuthContext";
 import { PageLayout } from "@/components/PageLayout";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -5,14 +9,34 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, Mail, Globe, BookOpen, GraduationCap, Bookmark, FileCheck, CreditCard, Clock, CheckCircle2 } from "lucide-react";
+import { User, Mail, Globe, BookOpen, GraduationCap, Bookmark, FileCheck, CreditCard, Clock, CheckCircle2, LogOut } from "lucide-react";
 import { mockLearning, mockGrants } from "@/data/mockData";
 import { GrantCard } from "@/components/GrantCard";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
 
 export default function ProfilePage() {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const { user, isLoggedIn, logout } = useAuth();
   const completed = mockLearning.filter((l) => l.completed).length;
   const progress = Math.round((completed / mockLearning.length) * 100);
+
+  useEffect(() => {
+    if (!isLoggedIn) {
+      navigate("/login");
+    }
+  }, [isLoggedIn, navigate]);
+
+  if (!user) {
+    return null;
+  }
+
+  const handleLogout = () => {
+    logout();
+    toast.success(t("auth.logoutSuccess") || "Logged out successfully");
+    navigate("/");
+  };
 
   return (
     <PageLayout>
@@ -26,9 +50,9 @@ export default function ProfilePage() {
                   <User className="h-9 w-9 text-primary-foreground" />
                 </div>
                 <div className="text-center sm:text-left flex-1">
-                  <h1 className="font-display text-2xl font-bold text-card-foreground">Demo User</h1>
+                  <h1 className="font-display text-2xl font-bold text-card-foreground">{user.firstName} {user.lastName}</h1>
                   <p className="text-sm text-muted-foreground flex items-center justify-center sm:justify-start gap-1.5 mt-1">
-                    <Mail className="h-3.5 w-3.5" /> demo@grantpath.com
+                    <Mail className="h-3.5 w-3.5" /> {user.email}
                   </p>
                   <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mt-3">
                     <Badge variant="secondary" className="rounded-full"><Globe className="h-3 w-3 mr-1" /> Germany</Badge>
@@ -38,7 +62,13 @@ export default function ProfilePage() {
                     <Badge variant="secondary" className="rounded-full"><BookOpen className="h-3 w-3 mr-1" /> B2 English</Badge>
                   </div>
                 </div>
-                <Button variant="outline" className="rounded-full">Edit Profile</Button>
+                <div className="flex flex-col gap-2">
+                  <Button variant="outline" className="rounded-full">{t("common.editProfile")}</Button>
+                  <Button variant="destructive" className="rounded-full gap-2" onClick={handleLogout}>
+                    <LogOut className="h-4 w-4" />
+                    {t("common.logout")}
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>

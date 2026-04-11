@@ -1,16 +1,18 @@
+import { useTranslation } from "react-i18next";
 import { PageLayout } from "@/components/PageLayout";
 import { PricingCard } from "@/components/PricingCard";
 import { pricingPlans } from "@/data/mockData";
 import { motion } from "framer-motion";
 
 export default function PricingPage() {
+  const { t } = useTranslation();
   return (
     <PageLayout>
       <div className="max-w-4xl mx-auto space-y-8">
         <div className="text-center">
-          <h1 className="font-display text-3xl md:text-4xl font-bold text-foreground">Expert Document Review</h1>
+          <h1 className="font-display text-3xl md:text-4xl font-bold text-foreground">{t("pricing.title")}</h1>
           <p className="text-muted-foreground mt-3 max-w-lg mx-auto">
-            Get professional feedback on your motivation letter, CV, or research proposal.
+            {t("pricing.description")}
           </p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
@@ -21,7 +23,7 @@ export default function PricingPage() {
           ))}
         </div>
         <div className="text-center text-sm text-muted-foreground pt-4">
-          <p>All plans include secure document upload and detailed written feedback.</p>
+          <p>{t("pricing.info")}</p>
         </div>
       </div>
     </PageLayout>

@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,16 +10,17 @@ interface PricingCardProps {
 }
 
 export function PricingCard({ plan }: PricingCardProps) {
+  const { t } = useTranslation();
   return (
     <Card className={`relative shadow-soft hover:shadow-hover transition-all duration-300 border rounded-2xl ${plan.popular ? "border-primary shadow-elevated ring-1 ring-primary/20" : "border-border/60"}`}>
       {plan.popular && (
         <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-          <Badge className="gradient-primary text-primary-foreground shadow-sm">Most Popular</Badge>
+          <Badge className="gradient-primary text-primary-foreground shadow-sm">{t("pricing.popular")}</Badge>
         </div>
       )}
       <CardHeader className="text-center pb-2 pt-6">
         <h3 className="font-display font-bold text-lg text-card-foreground">{plan.name}</h3>
-        <p className="text-muted-foreground text-sm">{plan.documents} document{plan.documents > 1 ? "s" : ""}</p>
+        <p className="text-muted-foreground text-sm">{plan.documents} {plan.documents === 1 ? t("pricing.document") : t("pricing.documents")}</p>
         <div className="mt-3">
           <span className="font-display text-4xl font-bold text-card-foreground">${plan.price}</span>
         </div>
@@ -35,7 +37,7 @@ export function PricingCard({ plan }: PricingCardProps) {
       </CardContent>
       <CardFooter>
         <Button className={`w-full ${plan.popular ? "gradient-primary text-primary-foreground hover:opacity-90" : ""}`} variant={plan.popular ? "default" : "outline"}>
-          Get Started
+          {t("pricing.getStarted")}
         </Button>
       </CardFooter>
     </Card>

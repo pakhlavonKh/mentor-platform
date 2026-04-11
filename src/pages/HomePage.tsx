@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { PageLayout } from "@/components/PageLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,20 +16,21 @@ const fadeUp = {
   visible: (i: number) => ({ opacity: 1, y: 0, transition: { delay: i * 0.1, duration: 0.5 } }),
 };
 
-const services = [
-  { icon: <FileText className="h-6 w-6" />, title: "Essay Review", desc: "Get expert feedback on your motivation letter and personal statement" },
-  { icon: <GraduationCap className="h-6 w-6" />, title: "CV Review", desc: "Professional CV optimization for scholarship applications" },
-  { icon: <Globe className="h-6 w-6" />, title: "English Prep", desc: "Improve your academic writing and interview skills" },
-];
-
-const steps = [
-  { num: "01", title: "Browse", desc: "Find scholarships matching your profile" },
-  { num: "02", title: "Prepare", desc: "Learn with our guided lessons" },
-  { num: "03", title: "Submit", desc: "Upload documents for expert review" },
-  { num: "04", title: "Succeed", desc: "Get feedback and apply with confidence" },
-];
-
 export default function HomePage() {
+  const { t } = useTranslation();
+
+  const services = [
+    { icon: <FileText className="h-6 w-6" />, title: t("home.essayReview"), desc: t("home.essayReviewDesc") },
+    { icon: <GraduationCap className="h-6 w-6" />, title: t("home.cvReview"), desc: t("home.cvReviewDesc") },
+    { icon: <Globe className="h-6 w-6" />, title: t("home.englishPrep"), desc: t("home.englishPrepDesc") },
+  ];
+
+  const steps = [
+    { num: "01", title: "browse", desc: t("home.browseDesc") },
+    { num: "02", title: "prepare", desc: t("home.prepareDesc") },
+    { num: "03", title: "submit", desc: t("home.submitDesc") },
+    { num: "04", title: "succeed", desc: t("home.succeedDesc") },
+  ];
   return (
     <PageLayout noPadding>
       {/* Hero */}
@@ -38,27 +40,27 @@ export default function HomePage() {
             <div className="grid lg:grid-cols-2 gap-12 items-center">
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="space-y-6">
                 <Badge variant="secondary" className="rounded-full px-4 py-1.5 font-body text-xs">
-                  <Star className="h-3 w-3 mr-1 fill-current" /> Trusted by 2,000+ students
+                  <Star className="h-3 w-3 mr-1 fill-current" /> {t("hero.trusted")}
                 </Badge>
                 <h1 className="font-display text-4xl lg:text-5xl xl:text-6xl font-bold text-foreground leading-tight">
-                  Your Path to <span className="text-primary italic">Scholarships</span> Starts Here
+                  {t("home.title")}
                 </h1>
                 <p className="text-lg text-muted-foreground leading-relaxed max-w-lg">
-                  Find grants, prepare winning applications, and get expert feedback — all in one platform.
+                  {t("home.subtitle")}
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 max-w-md">
                   <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input placeholder="Search scholarships..." className="pl-9 rounded-full bg-background" />
+                    <Input placeholder={t("common.search")} className="pl-9 rounded-full bg-background" />
                   </div>
                   <Button className="gradient-primary text-primary-foreground rounded-full px-6 hover:opacity-90">
-                    Explore <ArrowRight className="ml-1.5 h-4 w-4" />
+                    {t("common.grants")} <ArrowRight className="ml-1.5 h-4 w-4" />
                   </Button>
                 </div>
                 <div className="flex items-center gap-6 text-sm text-muted-foreground pt-2">
-                  <span className="flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 text-primary" /> 500+ Grants</span>
-                  <span className="flex items-center gap-1.5"><Users className="h-4 w-4 text-primary" /> Expert Reviews</span>
-                  <span className="flex items-center gap-1.5"><BookOpen className="h-4 w-4 text-primary" /> Free Lessons</span>
+                  <span className="flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 text-primary" /> 500+ {t("common.grants")}</span>
+                  <span className="flex items-center gap-1.5"><Users className="h-4 w-4 text-primary" /> {t("pricing.documents")}</span>
+                  <span className="flex items-center gap-1.5"><BookOpen className="h-4 w-4 text-primary" /> {t("common.learning")}</span>
                 </div>
               </motion.div>
               <motion.div
@@ -81,8 +83,8 @@ export default function HomePage() {
       <section className="py-16 lg:py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} className="text-center mb-12">
-            <motion.h2 custom={0} variants={fadeUp} className="font-display text-3xl font-bold text-foreground">Our Services</motion.h2>
-            <motion.p custom={1} variants={fadeUp} className="text-muted-foreground mt-3 max-w-md mx-auto">Professional support at every step of your scholarship journey</motion.p>
+            <motion.h2 custom={0} variants={fadeUp} className="font-display text-3xl font-bold text-foreground">{t("home.services")}</motion.h2>
+            <motion.p custom={1} variants={fadeUp} className="text-muted-foreground mt-3 max-w-md mx-auto">{t("home.servicesDesc")}</motion.p>
           </motion.div>
           <div className="grid md:grid-cols-3 gap-6">
             {services.map((s, i) => (
@@ -107,12 +109,12 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h2 className="font-display text-3xl font-bold text-foreground">Latest Grants</h2>
-              <p className="text-muted-foreground mt-1">Fresh opportunities updated daily</p>
+              <h2 className="font-display text-3xl font-bold text-foreground">{t("home.title")}</h2>
+              <p className="text-muted-foreground mt-1">{t("telegram.description")}</p>
             </div>
             <Link to="/grants">
               <Button variant="outline" className="rounded-full hidden sm:flex">
-                View All <ArrowRight className="ml-1.5 h-4 w-4" />
+                {t("common.all")} <ArrowRight className="ml-1.5 h-4 w-4" />
               </Button>
             </Link>
           </div>
@@ -124,7 +126,7 @@ export default function HomePage() {
             ))}
           </div>
           <div className="sm:hidden mt-6 text-center">
-            <Link to="/grants"><Button variant="outline" className="rounded-full">View All Grants</Button></Link>
+            <Link to="/grants"><Button variant="outline" className="rounded-full">{t("common.all")} {t("common.grants")}</Button></Link>
           </div>
         </div>
       </section>
@@ -133,15 +135,15 @@ export default function HomePage() {
       <section className="py-16 lg:py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="font-display text-3xl font-bold text-foreground">How It Works</h2>
-            <p className="text-muted-foreground mt-3">Four simple steps to your dream scholarship</p>
+            <h2 className="font-display text-3xl font-bold text-foreground">{t("home.steps")}</h2>
+            <p className="text-muted-foreground mt-3">{t("home.ctaDesc")}</p>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {steps.map((step, i) => (
               <motion.div key={step.num} custom={i} variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }}>
                 <div className="text-center space-y-3">
                   <span className="font-display text-4xl font-bold text-primary/20">{step.num}</span>
-                  <h3 className="font-display text-lg font-semibold text-foreground">{step.title}</h3>
+                  <h3 className="font-display text-lg font-semibold text-foreground">{t(`home.${step.title}Title`)}</h3>
                   <p className="text-sm text-muted-foreground">{step.desc}</p>
                 </div>
               </motion.div>
@@ -153,15 +155,15 @@ export default function HomePage() {
       {/* Pricing Preview */}
       <section className="py-16 lg:py-20 px-4 sm:px-6 lg:px-8 gradient-hero">
         <div className="max-w-7xl mx-auto text-center">
-          <h2 className="font-display text-3xl font-bold text-foreground">Expert Review Packages</h2>
-          <p className="text-muted-foreground mt-3 mb-8 max-w-md mx-auto">Professional feedback to make your application stand out</p>
+          <h2 className="font-display text-3xl font-bold text-foreground">{t("home.reviewPackages")}</h2>
+          <p className="text-muted-foreground mt-3 mb-8 max-w-md mx-auto">{t("home.reviewPackagesDesc")}</p>
           <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
             {pricingPlans.map((plan, i) => (
               <motion.div key={plan.id} custom={i} variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }}>
                 <Card className={`border shadow-soft hover:shadow-hover transition-all h-full ${plan.popular ? "border-primary ring-1 ring-primary/20 shadow-elevated relative" : "border-border/60"}`}>
                   {plan.popular && (
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                      <Badge className="gradient-primary text-primary-foreground rounded-full px-3">Popular</Badge>
+                      <Badge className="gradient-primary text-primary-foreground rounded-full px-3">{t("common.mostPopular")}</Badge>
                     </div>
                   )}
                   <CardContent className="p-6 pt-8 text-center space-y-4">
@@ -172,7 +174,7 @@ export default function HomePage() {
                     <p className="text-sm text-muted-foreground">{plan.documents} document{plan.documents > 1 ? "s" : ""} reviewed</p>
                     <Link to="/pricing">
                       <Button className={`w-full rounded-full mt-2 ${plan.popular ? "gradient-primary text-primary-foreground hover:opacity-90" : ""}`} variant={plan.popular ? "default" : "outline"}>
-                        Get Started
+                        {t("common.getStarted")}
                       </Button>
                     </Link>
                   </CardContent>
@@ -186,15 +188,15 @@ export default function HomePage() {
       {/* CTA */}
       <section className="py-16 lg:py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-3xl mx-auto text-center space-y-6">
-          <h2 className="font-display text-3xl lg:text-4xl font-bold text-foreground">Ready to Start Your Journey?</h2>
-          <p className="text-muted-foreground text-lg">Join thousands of students who found their dream scholarship through GrantPath.</p>
+          <h2 className="font-display text-3xl lg:text-4xl font-bold text-foreground">{t("home.cta")}</h2>
+          <p className="text-muted-foreground text-lg">{t("home.ctaDesc")}</p>
           <div className="flex justify-center gap-3">
             <Button className="gradient-primary text-primary-foreground rounded-full px-8 py-5 text-base hover:opacity-90">
-              Get Started Free
+              {t("common.getStarted")}
             </Button>
             <Link to="/learn">
               <Button variant="outline" className="rounded-full px-8 py-5 text-base">
-                Browse Lessons
+                {t("common.learning")}
               </Button>
             </Link>
           </div>
