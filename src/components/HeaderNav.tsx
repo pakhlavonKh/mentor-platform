@@ -2,7 +2,7 @@ import { Link, useLocation } from "react-router-dom";
 import { useState } from "react";
 import { Menu, X, User } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { LanguageSwitcher } from "./LanguageSwitcher";
@@ -102,71 +102,87 @@ export function HeaderNav() {
             )}
           </div>
 
-          {/* Mobile toggle */}
-          <button className="md:hidden p-2" onClick={() => setOpen(!open)}>
-            {open ? (
-              <X className="h-5 w-5" />
-            ) : (
-              <Menu className="h-5 w-5" />
-            )}
-          </button>
+          {/* Mobile controls */}
+          <div className="md:hidden flex items-center gap-2">
+            <LanguageSwitcher />
+            <button className="p-2" onClick={() => setOpen(!open)}>
+              {open ? (
+                <X className="h-5 w-5" />
+              ) : (
+                <Menu className="h-5 w-5" />
+              )}
+            </button>
+          </div>
         </div>
 
         {/* Mobile Nav */}
-        {open && (
-          <div className="md:hidden pb-4 border-t border-border/50 pt-3 space-y-1">
-            {NAV_ITEMS.map((item) => (
-              <Link
-                key={item.path}
-                to={item.path}
-                onClick={() => setOpen(false)}
-                className={cn(
-                  "block px-4 py-2.5 rounded-lg text-sm font-medium transition-colors",
-                  location.pathname === item.path
-                    ? "bg-accent text-accent-foreground"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                )}
-              >
-                {t(item.labelKey)}
-              </Link>
-            ))}
+        <AnimatePresence>
+          {open && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+              className="md:hidden fixed top-16 left-0 right-0 h-screen bg-white z-40 flex flex-col items-center justify-center"
+            >
+              <div className="w-full max-w-xs space-y-4">
+                {NAV_ITEMS.map((item, index) => (
+                  <motion.div
+                    key={item.path}
+                    initial={{ opacity: 0, x: -100 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.08, duration: 0.4, ease: "easeOut" }}
+                    className="text-center"
+                  >
+                    <Link
+                      to={item.path}
+                      onClick={() => setOpen(false)}
+                      className={cn(
+                        "block px-4 py-3 text-lg font-medium transition-colors",
+                        location.pathname === item.path
+                          ? "text-foreground"
+                          : "text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      {t(item.labelKey)}
+                    </Link>
+                  </motion.div>
+                ))}
 
-            <div className="pt-2 px-4 space-y-2">
-              <div className="pb-2">
-                <LanguageSwitcher />
+                <div className="pt-6 space-y-3 text-center">
+                  {isLoggedIn ? (
+                    <Link
+                      to="/profile"
+                      className="w-full"
+                      onClick={() => setOpen(false)}
+                    >
+                      <Button
+                        size="lg"
+                        className="w-fit mx-auto gradient-primary text-primary-foreground gap-2"
+                      >
+                        <User className="h-4 w-4" />
+                        {t("common.profile")}
+                      </Button>
+                    </Link>
+                  ) : (
+                    <Link
+                      to="/login"
+                      className="w-full mx-auto"
+                      onClick={() => setOpen(false)}
+                    >
+                      <Button
+                        size="lg"
+                        className="w-fit mx-auto  gradient-primary rounded-full text-primary-foreground text-base"
+                      >
+                        {t("common.login")}
+                      </Button>
+                    </Link>
+                  )}
+                </div>
               </div>
-
-              {isLoggedIn ? (
-                <Link
-                  to="/profile"
-                  className="w-full"
-                  onClick={() => setOpen(false)}
-                >
-                  <Button
-                    size="sm"
-                    className="w-full gradient-primary text-primary-foreground gap-2"
-                  >
-                    <User className="h-4 w-4" />
-                    {t("common.profile")}
-                  </Button>
-                </Link>
-              ) : (
-                <Link
-                  to="/login"
-                  className="w-full"
-                  onClick={() => setOpen(false)}
-                >
-                  <Button
-                    size="sm"
-                    className="w-full gradient-primary text-primary-foreground"
-                  >
-                    {t("common.login")}
-                  </Button>
-                </Link>
-              )}
-            </div>
-          </div>
-        )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </header>
   );

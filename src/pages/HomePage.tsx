@@ -34,43 +34,43 @@ export default function HomePage() {
   return (
     <PageLayout noPadding>
       {/* Hero */}
-      <section className="relative overflow-hidden">
-        <div className="gradient-hero">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
-            <div className="grid lg:grid-cols-2 gap-12 items-center">
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="space-y-6">
-                <Badge variant="secondary" className="rounded-full px-4 py-1.5 font-body text-xs">
+      <section className="relative overflow-hidden h-[calc(100vh-4rem)]">
+        <div className="gradient-hero h-full">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center justify-center">
+            <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center w-full h-full">
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="space-y-6 sm:space-y-8 flex flex-col justify-center h-full">
+                <Badge variant="secondary" className="rounded-full px-4 py-1.5 font-body text-xs w-fit">
                   <Star className="h-3 w-3 mr-1 fill-current" /> {t("hero.trusted")}
                 </Badge>
-                <h1 className="font-display text-4xl lg:text-5xl xl:text-6xl font-bold text-foreground leading-tight">
+                <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold text-foreground leading-tight">
                   {t("home.title")}
                 </h1>
-                <p className="text-lg text-muted-foreground leading-relaxed max-w-lg">
+                <p className="text-base sm:text-lg text-muted-foreground leading-relaxed max-w-lg">
                   {t("home.subtitle")}
                 </p>
-                <div className="flex flex-col sm:flex-row gap-3 max-w-md">
-                  <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input placeholder={t("common.search")} className="pl-9 rounded-full bg-background" />
+                <div className="flex flex-col gap-3 w-full max-w-full sm:max-w-md">
+                  <div className="relative">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input placeholder={t("common.search")} className="pl-11 py-3 rounded-full bg-background text-base" />
                   </div>
-                  <Button className="gradient-primary text-primary-foreground rounded-full px-6 hover:opacity-90">
-                    {t("common.grants")} <ArrowRight className="ml-1.5 h-4 w-4" />
+                  <Button className="gradient-primary text-primary-foreground rounded-full px-8 py-6 hover:opacity-90 w-full text-base font-medium">
+                    {t("common.grants")} <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 </div>
-                <div className="flex items-center gap-6 text-sm text-muted-foreground pt-2">
-                  <span className="flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 text-primary" /> 500+ {t("common.grants")}</span>
-                  <span className="flex items-center gap-1.5"><Users className="h-4 w-4 text-primary" /> {t("pricing.documents")}</span>
-                  <span className="flex items-center gap-1.5"><BookOpen className="h-4 w-4 text-primary" /> {t("common.learning")}</span>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 text-sm text-muted-foreground pt-4">
+                  <span className="flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0" /> 500+ {t("common.grants")}</span>
+                  <span className="flex items-center gap-1.5"><Users className="h-4 w-4 text-primary flex-shrink-0" /> {t("pricing.documents")}</span>
+                  <span className="flex items-center gap-1.5"><BookOpen className="h-4 w-4 text-primary flex-shrink-0" /> {t("common.learning")}</span>
                 </div>
               </motion.div>
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.6, delay: 0.2 }}
-                className="hidden lg:block"
+                className="hidden lg:flex items-center justify-center"
               >
-                <div className="relative rounded-3xl overflow-hidden shadow-elevated">
-                  <img src={heroImage} alt="Student studying abroad" width={1920} height={1080} className="w-full h-auto object-cover" />
+                <div className="relative rounded-3xl overflow-hidden shadow-elevated w-full aspect-square lg:aspect-auto max-h-[500px]">
+                  <img src={heroImage} alt="Student studying abroad" width={1920} height={1080} className="w-full h-full object-cover" />
                   <div className="absolute inset-0 bg-gradient-to-t from-foreground/10 to-transparent" />
                 </div>
               </motion.div>
@@ -107,13 +107,13 @@ export default function HomePage() {
       {/* Featured Grants */}
       <section className="py-16 lg:py-20 px-4 sm:px-6 lg:px-8 bg-muted/30">
         <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
             <div>
               <h2 className="font-display text-3xl font-bold text-foreground">{t("home.title")}</h2>
               <p className="text-muted-foreground mt-1">{t("telegram.description")}</p>
             </div>
             <Link to="/grants">
-              <Button variant="outline" className="rounded-full hidden sm:flex">
+              <Button variant="outline" className="rounded-full hidden sm:flex w-fit">
                 {t("common.all")} <ArrowRight className="ml-1.5 h-4 w-4" />
               </Button>
             </Link>
