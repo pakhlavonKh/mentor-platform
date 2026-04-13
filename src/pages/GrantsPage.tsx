@@ -1,33 +1,45 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { PageLayout } from "@/components/PageLayout";
 import { GrantCard } from "@/components/GrantCard";
-import { mockGrants } from "@/data/mockData";
+import { api, type Grant } from "@/lib/api";
+import { useLocale } from "@/hooks/use-locale";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search } from "lucide-react";
 import { motion } from "framer-motion";
 
-const countries = [...new Set(mockGrants.map((g) => g.country))];
 const types = ["bachelor", "master", "phd", "internship"] as const;
 
 export default function GrantsPage() {
   const { t } = useTranslation();
+  const [grants, setGrants] = useState<Grant[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [country, setCountry] = useState("all");
   const [type, setType] = useState("all");
   const [funding, setFunding] = useState("all");
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
+  const { lt } = useLocale();
+
+  useEffect(() => {
+    api.grants.list({ limit: "100" }).then((res) => {
+      setGrants(res.data);
+      setLoading(false);
+    }).catch(() => setLoading(false));
+  }, []);
+
+  const countries = useMemo(() => [...new Set(grants.map((g) => g.country))], [grants]);
 
   const filtered = useMemo(() => {
-    return mockGrants.filter((g) => {
-      if (search && !g.title.toLowerCase().includes(search.toLowerCase())) return false;
+    return grants.filter((g) => {
+      if (search && !lt(g.title).toLowerCase().includes(search.toLowerCase())) return false;
       if (country !== "all" && g.country !== country) return false;
       if (type !== "all" && g.type !== type) return false;
       if (funding !== "all" && g.funding !== funding) return false;
       return true;
     });
-  }, [search, country, type, funding]);
+  }, [grants, search, country, type, funding, lt]);
 
   const toggleSave = (id: string) => {
     setSavedIds((prev) => { const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next; });
@@ -50,15 +62,15 @@ export default function GrantsPage() {
             <SelectContent>{[<SelectItem key="all" value="all">{t("common.allCountries")}</SelectItem>, ...countries.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)]}</SelectContent>
           </Select>
           <Select value={type} onValueChange={setType}>
-            <SelectTrigger className="w-full sm:w-36 rounded-full"><SelectValue placeholder="Type" /></SelectTrigger>
-            <SelectContent>{[<SelectItem key="all" value="all">All Types</SelectItem>, ...types.map((t) => <SelectItem key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</SelectItem>)]}</SelectContent>
+            <SelectTrigger className="w-full sm:w-36 rounded-full"><SelectValue placeholder={t("grantsFilter.typePlaceholder")} /></SelectTrigger>
+            <SelectContent>{[<SelectItem key="all" value="all">{t("grantsFilter.allTypes")}</SelectItem>, ...types.map((tp) => <SelectItem key={tp} value={tp}>{t(`grants.${tp}`)}</SelectItem>)]}</SelectContent>
           </Select>
           <Select value={funding} onValueChange={setFunding}>
-            <SelectTrigger className="w-full sm:w-36 rounded-full"><SelectValue placeholder="Funding" /></SelectTrigger>
-            <SelectContent><SelectItem value="all">All Funding</SelectItem><SelectItem value="full">Fully Funded</SelectItem><SelectItem value="partial">Partial</SelectItem></SelectContent>
+            <SelectTrigger className="w-full sm:w-36 rounded-full"><SelectValue placeholder={t("grantsFilter.fundingPlaceholder")} /></SelectTrigger>
+            <SelectContent><SelectItem value="all">{t("grantsFilter.allFunding")}</SelectItem><SelectItem value="full">{t("grants.fullFunding")}</SelectItem><SelectItem value="partial">{t("grants.partialFunding")}</SelectItem></SelectContent>
           </Select>
         </div>
-        <p className="text-sm text-muted-foreground">{filtered.length} grant{filtered.length !== 1 ? "s" : ""} found</p>
+        <p className="text-sm text-muted-foreground">{t("grantsFilter.grantsFound", { count: filtered.length })}</p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {filtered.map((grant, i) => (
             <motion.div key={grant.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}>
@@ -66,7 +78,7 @@ export default function GrantsPage() {
             </motion.div>
           ))}
         </div>
-        {filtered.length === 0 && <div className="text-center py-16"><p className="text-muted-foreground">No grants match your filters.</p></div>}
+        {filtered.length === 0 && <div className="text-center py-16"><p className="text-muted-foreground">{t("grantsFilter.noMatch")}</p></div>}
       </div>
     </PageLayout>
   );

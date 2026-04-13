@@ -1,15 +1,13 @@
+import "dotenv/config";
 import "reflect-metadata";
 import express from "express";
 import cors from "cors";
-import dotenv from "dotenv";
 import { AppDataSource } from "./config/database.js";
 import grantsRouter from "./routes/grants.js";
 import learningRouter from "./routes/learning.js";
 import telegramRouter from "./routes/telegram.js";
 import pricingRouter from "./routes/pricing.js";
 import authRouter from "./routes/auth.js";
-
-dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;

@@ -1,4 +1,5 @@
 export const kz = {
+  siteTitle: "StudyQadam — Стипендия платформасы",
   common: {
     home: "Басты бет",
     grants: "Грантар",
@@ -186,5 +187,28 @@ export const kz = {
     serverError: "Сервер қатесі орын алды",
     tryAgain: "Қайла тап",
     goHome: "Басты бетке оралу",
+  },
+  dashboard: {
+    welcome: "Қайта оралуыңызбен 👋",
+    subtitle: "Стипендия жолыңыздағы жаңалықтар.",
+    availableGrants: "Қол жетімді грантар",
+    lessonsCompleted: "Өткен сабақтар",
+    submissions: "Өтінімдер",
+    savedGrants: "Сақталған грантар",
+    thisWeek: "+3 осы аптада",
+    complete: "аяқталды",
+    recommendedGrants: "Ұсынылған грантар",
+    continueLearning: "Оқуды жалғастыру",
+  },
+  grantsFilter: {
+    allTypes: "Барлық түрлер",
+    allFunding: "Барлық қаржыландыру",
+    grantsFound_one: "{{count}} грант табылды",
+    grantsFound_other: "{{count}} грант табылды",
+    noMatch: "Сүзгілеріңізге сәйкес грант табылмады.",
+    typePlaceholder: "Түрі",
+    fundingPlaceholder: "Қаржыландыру",
+    documentsReviewed_one: "{{count}} құжат тексерілді",
+    documentsReviewed_other: "{{count}} құжат тексерілді",
   },
 };

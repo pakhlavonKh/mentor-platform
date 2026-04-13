@@ -1,4 +1,5 @@
 export const en = {
+  siteTitle: "StudyQadam — Your Scholarship Platform",
   common: {
     home: "Home",
     grants: "Grants",
@@ -186,5 +187,28 @@ export const en = {
     serverError: "Server error occurred",
     tryAgain: "Try Again",
     goHome: "Return to Home",
+  },
+  dashboard: {
+    welcome: "Welcome back 👋",
+    subtitle: "Here's what's new in your scholarship journey.",
+    availableGrants: "Available Grants",
+    lessonsCompleted: "Lessons Completed",
+    submissions: "Submissions",
+    savedGrants: "Saved Grants",
+    thisWeek: "+3 this week",
+    complete: "complete",
+    recommendedGrants: "Recommended Grants",
+    continueLearning: "Continue Learning",
+  },
+  grantsFilter: {
+    allTypes: "All Types",
+    allFunding: "All Funding",
+    grantsFound_one: "{{count}} grant found",
+    grantsFound_other: "{{count}} grants found",
+    noMatch: "No grants match your filters.",
+    typePlaceholder: "Type",
+    fundingPlaceholder: "Funding",
+    documentsReviewed_one: "{{count}} document reviewed",
+    documentsReviewed_other: "{{count}} documents reviewed",
   },
 };

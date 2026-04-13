@@ -3,7 +3,8 @@ import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Bookmark, ExternalLink, Calendar, MapPin } from "lucide-react";
-import type { Grant } from "@/data/mockData";
+import type { Grant } from "@/lib/api";
+import { useLocale } from "@/hooks/use-locale";
 
 interface GrantCardProps {
   grant: Grant;
@@ -19,6 +20,7 @@ const typeLabel = (type: string) =>
 
 export function GrantCard({ grant, saved, onSave }: GrantCardProps) {
   const { t, i18n } = useTranslation();
+  const { lt } = useLocale();
   const locale = i18n.language === "en" ? "en-US" : i18n.language === "ru" ? "ru-RU" : "kk-KK";
 
   return (
@@ -26,7 +28,7 @@ export function GrantCard({ grant, saved, onSave }: GrantCardProps) {
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-2">
           <div className="space-y-1.5">
-            <h3 className="font-display font-semibold text-base leading-tight text-card-foreground">{grant.title}</h3>
+            <h3 className="font-display font-semibold text-base leading-tight text-card-foreground">{lt(grant.title)}</h3>
             <div className="flex items-center gap-3 text-sm text-muted-foreground">
               <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{grant.country}</span>
               <span className="flex items-center gap-1"><Calendar className="h-3.5 w-3.5" />{new Date(grant.deadline).toLocaleDateString(locale, { month: "short", day: "numeric", year: "numeric" })}</span>
@@ -38,7 +40,7 @@ export function GrantCard({ grant, saved, onSave }: GrantCardProps) {
         </div>
       </CardHeader>
       <CardContent className="pb-3">
-        <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2">{grant.description}</p>
+        <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2">{lt(grant.description)}</p>
       </CardContent>
       <CardFooter className="flex items-center justify-between pt-0">
         <div className="flex gap-2">

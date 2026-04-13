@@ -5,8 +5,8 @@ export class Grant {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
 
-  @Column()
-  title!: string;
+  @Column("jsonb")
+  title!: { en: string; ru: string; kz: string };
 
   @Column()
   country!: string;
@@ -26,8 +26,8 @@ export class Grant {
   @Column()
   deadline!: string;
 
-  @Column("text")
-  description!: string;
+  @Column("jsonb")
+  description!: { en: string; ru: string; kz: string };
 
   @Column()
   link!: string;

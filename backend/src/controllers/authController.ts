@@ -8,11 +8,14 @@ const userRepository = AppDataSource.getRepository(User);
 
 export const register = async (req: Request, res: Response) => {
   try {
-    const { email, password, firstName, lastName } = req.body;
+    const { email, password, firstName, lastName, role } = req.body;
 
     if (!email || !password || !firstName || !lastName) {
       return res.status(400).json({ message: "Missing required fields" });
     }
+
+    const validRoles = ["admin", "tutor", "student"];
+    const userRole = validRoles.includes(role) ? role : "student";
 
     const existingUser = await userRepository.findOne({ where: { email } });
     if (existingUser) {
@@ -26,6 +29,7 @@ export const register = async (req: Request, res: Response) => {
       password: hashedPassword,
       firstName,
       lastName,
+      role: userRole,
     });
 
     const savedUser = await userRepository.save(user);
@@ -36,6 +40,7 @@ export const register = async (req: Request, res: Response) => {
       email: savedUser.email,
       firstName: savedUser.firstName,
       lastName: savedUser.lastName,
+      role: savedUser.role,
       token,
     });
   } catch (error) {
@@ -70,6 +75,7 @@ export const login = async (req: Request, res: Response) => {
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,
+      role: user.role,
       token,
     });
   } catch (error) {
@@ -92,6 +98,7 @@ export const getProfile = async (req: Request, res: Response) => {
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,
+      role: user.role,
     });
   } catch (error) {
     res.status(500).json({ message: "Error fetching profile", error });

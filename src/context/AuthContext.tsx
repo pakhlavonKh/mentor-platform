@@ -1,10 +1,12 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { api, type UserRole } from "@/lib/api";
 
 interface User {
   id: string;
   email: string;
   firstName: string;
   lastName: string;
+  role: UserRole;
 }
 
 interface AuthContextType {
@@ -21,7 +23,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  // Check if user is already logged in on mount
   useEffect(() => {
     const token = localStorage.getItem("authToken");
     const userData = localStorage.getItem("userData");
@@ -37,81 +38,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = async (email: string, password: string) => {
-    // Simulate API call
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        // Basic validation
-        if (!email || !password) {
-          reject(new Error("Email and password are required"));
-          return;
-        }
-
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-          reject(new Error("Invalid email format"));
-          return;
-        }
-
-        if (password.length < 6) {
-          reject(new Error("Password must be at least 6 characters"));
-          return;
-        }
-
-        // Simulate successful login
-        const userData: User = {
-          id: Math.random().toString(36).substr(2, 9),
-          email,
-          firstName: email.split("@")[0],
-          lastName: "User",
-        };
-
-        const token = Math.random().toString(36).substr(2, 100);
-        localStorage.setItem("authToken", token);
-        localStorage.setItem("userData", JSON.stringify(userData));
-
-        setUser(userData);
-        setIsLoggedIn(true);
-        resolve();
-      }, 800);
-    });
+    const data = await api.auth.login(email, password);
+    const userData: User = {
+      id: data.id,
+      email: data.email,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      role: data.role,
+    };
+    localStorage.setItem("authToken", data.token);
+    localStorage.setItem("userData", JSON.stringify(userData));
+    setUser(userData);
+    setIsLoggedIn(true);
   };
 
   const signup = async (email: string, password: string, firstName: string, lastName: string) => {
-    // Simulate API call
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        // Basic validation
-        if (!email || !password || !firstName || !lastName) {
-          reject(new Error("All fields are required"));
-          return;
-        }
-
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-          reject(new Error("Invalid email format"));
-          return;
-        }
-
-        if (password.length < 6) {
-          reject(new Error("Password must be at least 6 characters"));
-          return;
-        }
-
-        // Simulate successful signup
-        const userData: User = {
-          id: Math.random().toString(36).substr(2, 9),
-          email,
-          firstName,
-          lastName,
-        };
-
-        const token = Math.random().toString(36).substr(2, 100);
-        localStorage.setItem("authToken", token);
-        localStorage.setItem("userData", JSON.stringify(userData));
-
-        setUser(userData);
-        setIsLoggedIn(true);
-        resolve();
-      }, 800);
-    });
+    const data = await api.auth.register(email, password, firstName, lastName);
+    const userData: User = {
+      id: data.id,
+      email: data.email,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      role: data.role,
+    };
+    localStorage.setItem("authToken", data.token);
+    localStorage.setItem("userData", JSON.stringify(userData));
+    setUser(userData);
+    setIsLoggedIn(true);
   };
 
   const logout = () => {

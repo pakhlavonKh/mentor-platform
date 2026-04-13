@@ -17,6 +17,13 @@ export class User {
   @Column()
   lastName!: string;
 
+  @Column({
+    type: "enum",
+    enum: ["admin", "tutor", "student"],
+    default: "student",
+  })
+  role!: "admin" | "tutor" | "student";
+
   @Column({ default: true })
   isActive!: boolean;
 

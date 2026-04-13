@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { PageLayout } from "@/components/PageLayout";
@@ -6,7 +7,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { GrantCard } from "@/components/GrantCard";
-import { mockGrants, pricingPlans } from "@/data/mockData";
+import { api, type Grant, type PricingPlan } from "@/lib/api";
+import { useLocale } from "@/hooks/use-locale";
 import { Search, GraduationCap, FileText, Globe, ArrowRight, CheckCircle2, Star, Users, BookOpen } from "lucide-react";
 import { motion } from "framer-motion";
 import heroImage from "@/assets/hero-image.jpg";
@@ -18,6 +20,14 @@ const fadeUp = {
 
 export default function HomePage() {
   const { t } = useTranslation();
+  const [grants, setGrants] = useState<Grant[]>([]);
+  const [pricingPlans, setPricingPlans] = useState<PricingPlan[]>([]);
+  const { lt } = useLocale();
+
+  useEffect(() => {
+    api.grants.list({ limit: "4" }).then((res) => setGrants(res.data)).catch(() => {});
+    api.pricing.list().then(setPricingPlans).catch(() => {});
+  }, []);
 
   const services = [
     { icon: <FileText className="h-6 w-6" />, title: t("home.essayReview"), desc: t("home.essayReviewDesc") },
@@ -119,7 +129,7 @@ export default function HomePage() {
             </Link>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-2 gap-5">
-            {mockGrants.slice(0, 4).map((grant, i) => (
+            {grants.slice(0, 4).map((grant, i) => (
               <motion.div key={grant.id} custom={i} variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }}>
                 <GrantCard grant={grant} />
               </motion.div>
@@ -167,11 +177,11 @@ export default function HomePage() {
                     </div>
                   )}
                   <CardContent className="p-6 pt-8 text-center space-y-4">
-                    <h3 className="font-display text-lg font-semibold text-card-foreground">{plan.name}</h3>
+                    <h3 className="font-display text-lg font-semibold text-card-foreground">{lt(plan.name)}</h3>
                     <div>
                       <span className="font-display text-4xl font-bold text-card-foreground">${plan.price}</span>
                     </div>
-                    <p className="text-sm text-muted-foreground">{plan.documents} document{plan.documents > 1 ? "s" : ""} reviewed</p>
+                    <p className="text-sm text-muted-foreground">{t("grantsFilter.documentsReviewed", { count: plan.documents })}</p>
                     <Link to="/pricing">
                       <Button className={`w-full rounded-full mt-2 ${plan.popular ? "gradient-primary text-primary-foreground hover:opacity-90" : ""}`} variant={plan.popular ? "default" : "outline"}>
                         {t("common.getStarted")}

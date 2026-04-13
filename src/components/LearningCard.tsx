@@ -1,7 +1,8 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, Circle, PlayCircle, FileText, ListChecks } from "lucide-react";
-import type { LearningContent } from "@/data/mockData";
+import type { LearningContent } from "@/lib/api";
+import { useLocale } from "@/hooks/use-locale";
 
 interface LearningCardProps {
   content: LearningContent;
@@ -17,6 +18,7 @@ const typeIcon = (type: string) => {
 };
 
 export function LearningCard({ content, onClick }: LearningCardProps) {
+  const { lt } = useLocale();
   return (
     <Card
       className="group shadow-soft hover:shadow-hover transition-all duration-300 cursor-pointer border border-border/60 hover:border-primary/30 rounded-2xl"
@@ -26,7 +28,7 @@ export function LearningCard({ content, onClick }: LearningCardProps) {
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-2">
             {typeIcon(content.type)}
-            <h3 className="font-display font-semibold text-sm leading-tight text-card-foreground">{content.title}</h3>
+            <h3 className="font-display font-semibold text-sm leading-tight text-card-foreground">{lt(content.title)}</h3>
           </div>
           {content.completed ? (
             <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />
@@ -36,9 +38,9 @@ export function LearningCard({ content, onClick }: LearningCardProps) {
         </div>
       </CardHeader>
       <CardContent>
-        <p className="text-sm text-muted-foreground leading-relaxed mb-3 line-clamp-2">{content.description}</p>
+        <p className="text-sm text-muted-foreground leading-relaxed mb-3 line-clamp-2">{lt(content.description)}</p>
         <div className="flex items-center gap-2">
-          <Badge variant="secondary" className="text-xs">{content.topic}</Badge>
+          <Badge variant="secondary" className="text-xs">{lt(content.topic)}</Badge>
           <span className="text-xs text-muted-foreground">{content.duration}</span>
         </div>
       </CardContent>

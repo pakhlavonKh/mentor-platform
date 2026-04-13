@@ -5,8 +5,8 @@ export class PricingPlan {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
 
-  @Column()
-  name!: string;
+  @Column("jsonb")
+  name!: { en: string; ru: string; kz: string };
 
   @Column()
   documents!: number;
@@ -14,8 +14,8 @@ export class PricingPlan {
   @Column()
   price!: number;
 
-  @Column("simple-array")
-  features!: string[];
+  @Column("jsonb")
+  features!: { en: string[]; ru: string[]; kz: string[] };
 
   @Column({ default: false })
   popular!: boolean;

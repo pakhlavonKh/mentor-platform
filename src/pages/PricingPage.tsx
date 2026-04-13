@@ -1,11 +1,17 @@
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { PageLayout } from "@/components/PageLayout";
 import { PricingCard } from "@/components/PricingCard";
-import { pricingPlans } from "@/data/mockData";
+import { api, type PricingPlan } from "@/lib/api";
 import { motion } from "framer-motion";
 
 export default function PricingPage() {
   const { t } = useTranslation();
+  const [plans, setPlans] = useState<PricingPlan[]>([]);
+
+  useEffect(() => {
+    api.pricing.list().then(setPlans).catch(() => {});
+  }, []);
   return (
     <PageLayout>
       <div className="max-w-4xl mx-auto space-y-8">
@@ -16,7 +22,7 @@ export default function PricingPage() {
           </p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
-          {pricingPlans.map((plan, i) => (
+          {plans.map((plan, i) => (
             <motion.div key={plan.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
               <PricingCard plan={plan} />
             </motion.div>

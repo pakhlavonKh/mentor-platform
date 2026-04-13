@@ -5,8 +5,8 @@ export class LearningContent {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
 
-  @Column()
-  title!: string;
+  @Column("jsonb")
+  title!: { en: string; ru: string; kz: string };
 
   @Column({
     type: "enum",
@@ -14,11 +14,11 @@ export class LearningContent {
   })
   type!: "video" | "text" | "checklist";
 
-  @Column()
-  topic!: string;
+  @Column("jsonb")
+  topic!: { en: string; ru: string; kz: string };
 
-  @Column("text")
-  description!: string;
+  @Column("jsonb")
+  description!: { en: string; ru: string; kz: string };
 
   @Column()
   duration!: string;

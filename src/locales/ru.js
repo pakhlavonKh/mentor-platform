@@ -1,4 +1,5 @@
 export const ru = {
+  siteTitle: "StudyQadam — Платформа для стипендий",
   common: {
     home: "Главная",
     grants: "Гранты",
@@ -186,5 +187,28 @@ export const ru = {
     serverError: "Произошла ошибка сервера",
     tryAgain: "Попробуйте еще раз",
     goHome: "Вернуться на главную",
+  },
+  dashboard: {
+    welcome: "С возвращением 👋",
+    subtitle: "Что нового в вашем пути к стипендии.",
+    availableGrants: "Доступные гранты",
+    lessonsCompleted: "Уроки пройдены",
+    submissions: "Заявки",
+    savedGrants: "Сохранённые гранты",
+    thisWeek: "+3 на этой неделе",
+    complete: "завершено",
+    recommendedGrants: "Рекомендуемые гранты",
+    continueLearning: "Продолжить обучение",
+  },
+  grantsFilter: {
+    allTypes: "Все типы",
+    allFunding: "Всё финансирование",
+    grantsFound_one: "{{count}} грант найден",
+    grantsFound_other: "{{count}} грантов найдено",
+    noMatch: "Грантов по вашим фильтрам не найдено.",
+    typePlaceholder: "Тип",
+    fundingPlaceholder: "Финансирование",
+    documentsReviewed_one: "{{count}} документ рассмотрен",
+    documentsReviewed_other: "{{count}} документов рассмотрено",
   },
 };
