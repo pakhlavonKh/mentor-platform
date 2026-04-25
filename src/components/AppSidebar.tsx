@@ -1,6 +1,7 @@
 import { LayoutDashboard, GraduationCap, Send, BookOpen, CreditCard, User, GlobeLock } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
 import {
   Sidebar,
   SidebarContent,
@@ -31,6 +32,7 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
+  const { isLoggedIn } = useAuth();
   const isActive = (path: string) => location.pathname === path;
 
   return (
@@ -55,7 +57,9 @@ export function AppSidebar() {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {mainItems.map((item) => (
+              {mainItems
+                .filter((item) => item.url !== "/learn" || isLoggedIn)
+                .map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild isActive={isActive(item.url)}>
                     <NavLink to={item.url} end className="hover:bg-sidebar-accent/50" activeClassName="bg-sidebar-accent text-sidebar-primary font-medium">

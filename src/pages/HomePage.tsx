@@ -11,6 +11,7 @@ import { api, type Grant, type PricingPlan } from "@/lib/api";
 import { useLocale } from "@/hooks/use-locale";
 import { Search, GraduationCap, FileText, Globe, ArrowRight, CheckCircle2, Star, Users, BookOpen } from "lucide-react";
 import { motion } from "framer-motion";
+import { useAuth } from "@/context/AuthContext";
 import heroImage from "@/assets/hero-image.jpg";
 
 const fadeUp = {
@@ -20,6 +21,7 @@ const fadeUp = {
 
 export default function HomePage() {
   const { t } = useTranslation();
+  const { isLoggedIn } = useAuth();
   const [grants, setGrants] = useState<Grant[]>([]);
   const [pricingPlans, setPricingPlans] = useState<PricingPlan[]>([]);
   const { lt } = useLocale();
@@ -204,11 +206,13 @@ export default function HomePage() {
             <Button className="gradient-primary text-primary-foreground rounded-full px-8 py-5 text-base hover:opacity-90">
               {t("common.getStarted")}
             </Button>
-            <Link to="/learn">
-              <Button variant="outline" className="rounded-full px-8 py-5 text-base">
-                {t("common.learning")}
-              </Button>
-            </Link>
+            {isLoggedIn && (
+              <Link to="/learn">
+                <Button variant="outline" className="rounded-full px-8 py-5 text-base">
+                  {t("common.learning")}
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
       </section>

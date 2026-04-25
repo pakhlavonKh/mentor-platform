@@ -34,8 +34,21 @@ export function GrantCard({ grant, saved, onSave }: GrantCardProps) {
               <span className="flex items-center gap-1"><Calendar className="h-3.5 w-3.5" />{new Date(grant.deadline).toLocaleDateString(locale, { month: "short", day: "numeric", year: "numeric" })}</span>
             </div>
           </div>
-          <Button variant="ghost" size="icon" className={saved ? "text-primary" : "text-muted-foreground"} onClick={onSave}>
-            <Bookmark className={`h-4 w-4 ${saved ? "fill-current" : ""}`} />
+          <Button
+            variant="ghost"
+            size="icon"
+            className={`p-0 ${saved ? "text-primary" : "text-muted-foreground"}`}
+            onClick={onSave}
+          >
+            {saved ? (
+              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                <path d="M6 2h12v18l-6-3-6 3V2z" />
+              </svg>
+            ) : (
+              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                <path d="M6 2h12v18l-6-3-6 3V2z" />
+              </svg>
+            )}
           </Button>
         </div>
       </CardHeader>

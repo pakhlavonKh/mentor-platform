@@ -1,6 +1,6 @@
 import "dotenv/config";
 import "reflect-metadata";
-import express from "express";
+import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import { AppDataSource } from "./config/database.js";
 import grantsRouter from "./routes/grants.js";
@@ -17,8 +17,10 @@ app.use(cors({
   origin: process.env.FRONTEND_URL || "http://localhost:5173",
   credentials: true,
 }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// allow larger JSON bodies for profile image uploads (base64)
+const jsonLimit = process.env.JSON_LIMIT || "5mb";
+app.use(express.json({ limit: jsonLimit }));
+app.use(express.urlencoded({ extended: true, limit: jsonLimit }));
 
 // Health check
 app.get("/health", (req, res) => {
@@ -33,7 +35,7 @@ app.use("/api/pricing", pricingRouter);
 app.use("/api/auth", authRouter);
 
 // Error handling middleware
-app.use((err: any, req: any, res: any, next: any) => {
+app.use((err: unknown, req: Request, res: Response, next: NextFunction) => {
   console.error(err);
   res.status(500).json({ message: "Internal server error" });
 });

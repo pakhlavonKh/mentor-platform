@@ -11,15 +11,22 @@ async function request<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${API_BASE}${endpoint}`, { ...options, headers });
 
   if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw new Error(body.message || `Request failed (${res.status})`);
+    const body = await res.json().catch(() => ({} as Record<string, unknown>));
+    const maybeMessage =
+      typeof body === "object" && body !== null && "message" in body && typeof (body as Record<string, unknown>)["message"] === "string"
+        ? (body as Record<string, string>)["message"]
+        : undefined;
+    const err = new Error(maybeMessage ?? `Request failed (${res.status})`) as Error & { status?: number; body?: unknown };
+    err.status = res.status;
+    err.body = body;
+    throw err;
   }
 
   return res.json();
 }
 
 // ---------- Auth ----------
-export type UserRole = "admin" | "tutor" | "student";
+export type UserRole = "admin" | "mentor" | "student";
 
 export interface AuthResponse {
   id: string;
@@ -27,7 +34,9 @@ export interface AuthResponse {
   firstName: string;
   lastName: string;
   role: UserRole;
+  profilePicture?: string | null;
   token: string;
+  savedGrants?: string[];
 }
 
 export const api = {
@@ -43,6 +52,9 @@ export const api = {
         body: JSON.stringify({ email, password, firstName, lastName }),
       }),
     profile: () => request<Omit<AuthResponse, "token">>("/auth/profile"),
+    update: (payload: Partial<AuthResponse>) => request<Omit<AuthResponse, "token">>(`/auth/profile`, { method: "PUT", body: JSON.stringify(payload) }),
+    saveGrant: (grantId: string) => request<{ message: string }>(`/auth/profile/saved/${grantId}`, { method: "POST" }),
+    removeSavedGrant: (grantId: string) => request<{ message: string }>(`/auth/profile/saved/${grantId}`, { method: "DELETE" }),
   },
 
   // ---------- Grants ----------
@@ -52,6 +64,9 @@ export const api = {
       return request<{ data: Grant[]; pagination: Pagination }>(`/grants${qs}`);
     },
     get: (id: string) => request<Grant>(`/grants/${id}`),
+    create: (payload: Partial<Grant>) => request<Grant>(`/grants`, { method: "POST", body: JSON.stringify(payload) }),
+    update: (id: string, payload: Partial<Grant>) => request<Grant>(`/grants/${id}`, { method: "PUT", body: JSON.stringify(payload) }),
+    delete: (id: string) => request<{ message: string }>(`/grants/${id}`, { method: "DELETE" }),
   },
 
   // ---------- Learning ----------

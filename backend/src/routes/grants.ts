@@ -6,14 +6,14 @@ import {
   updateGrant,
   deleteGrant,
 } from "../controllers/grantController.js";
-import { authenticate } from "../middleware/auth.js";
+import { authenticate, authorizeRole } from "../middleware/auth.js";
 
 const router = Router();
 
 router.get("/", getGrants);
 router.get("/:id", getGrantById);
-router.post("/", authenticate, createGrant);
-router.put("/:id", authenticate, updateGrant);
-router.delete("/:id", authenticate, deleteGrant);
+router.post("/", authenticate, authorizeRole("admin"), createGrant);
+router.put("/:id", authenticate, authorizeRole("admin"), updateGrant);
+router.delete("/:id", authenticate, authorizeRole("admin"), deleteGrant);
 
 export default router;

@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { api, type UserRole } from "@/lib/api";
+import type { AuthResponse } from "@/lib/api";
 
 interface User {
   id: string;
@@ -7,6 +8,8 @@ interface User {
   firstName: string;
   lastName: string;
   role: UserRole;
+  profilePicture?: string | null;
+  savedGrants?: string[];
 }
 
 interface AuthContextType {
@@ -14,6 +17,7 @@ interface AuthContextType {
   isLoggedIn: boolean;
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string, firstName: string, lastName: string) => Promise<void>;
+  updateProfile: (payload: Partial<User>) => Promise<void>;
   logout: () => void;
 }
 
@@ -37,14 +41,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  // Keep in-memory `user` in sync with `localStorage.userData` (other tabs or hooks may update it)
+  useEffect(() => {
+    const handler = (e: StorageEvent) => {
+      if (e.key === "userData") {
+        try {
+          const newVal = e.newValue ? JSON.parse(e.newValue) : null;
+          setUser(newVal);
+          setIsLoggedIn(Boolean(localStorage.getItem("authToken") && newVal));
+        } catch {
+          // ignore
+        }
+      }
+    };
+    window.addEventListener("storage", handler);
+    return () => window.removeEventListener("storage", handler);
+  }, []);
+
   const login = async (email: string, password: string) => {
-    const data = await api.auth.login(email, password);
+    const data: AuthResponse = await api.auth.login(email, password);
     const userData: User = {
       id: data.id,
       email: data.email,
       firstName: data.firstName,
       lastName: data.lastName,
       role: data.role,
+      profilePicture: data.profilePicture,
+      savedGrants: (data as AuthResponse).savedGrants || [],
     };
     localStorage.setItem("authToken", data.token);
     localStorage.setItem("userData", JSON.stringify(userData));
@@ -52,14 +75,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoggedIn(true);
   };
 
-  const signup = async (email: string, password: string, firstName: string, lastName: string) => {
-    const data = await api.auth.register(email, password, firstName, lastName);
+  const updateProfile = async (payload: Partial<User>) => {
+    const data = await api.auth.update(payload as Partial<AuthResponse>);
     const userData: User = {
       id: data.id,
       email: data.email,
       firstName: data.firstName,
       lastName: data.lastName,
       role: data.role,
+      profilePicture: data.profilePicture,
+      savedGrants: (data as AuthResponse).savedGrants || [],
+    };
+    localStorage.setItem("userData", JSON.stringify(userData));
+    setUser(userData);
+  };
+
+  const signup = async (email: string, password: string, firstName: string, lastName: string) => {
+    const data: AuthResponse = await api.auth.register(email, password, firstName, lastName);
+    const userData: User = {
+      id: data.id,
+      email: data.email,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      role: data.role,
+      profilePicture: data.profilePicture,
+      savedGrants: (data as AuthResponse).savedGrants || [],
     };
     localStorage.setItem("authToken", data.token);
     localStorage.setItem("userData", JSON.stringify(userData));
@@ -75,7 +115,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoggedIn, login, signup, logout }}>
+    <AuthContext.Provider value={{ user, isLoggedIn, login, signup, updateProfile, logout }}>
       {children}
     </AuthContext.Provider>
   );

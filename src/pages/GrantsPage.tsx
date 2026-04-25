@@ -1,5 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import useSavedGrants from "@/hooks/use-saved-grants";
+import { toast } from "sonner";
 import { PageLayout } from "@/components/PageLayout";
 import { GrantCard } from "@/components/GrantCard";
 import { api, type Grant } from "@/lib/api";
@@ -19,7 +21,7 @@ export default function GrantsPage() {
   const [country, setCountry] = useState("all");
   const [type, setType] = useState("all");
   const [funding, setFunding] = useState("all");
-  const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
+  const { savedIds, toggleSave } = useSavedGrants();
   const { lt } = useLocale();
 
   useEffect(() => {
@@ -41,9 +43,7 @@ export default function GrantsPage() {
     });
   }, [grants, search, country, type, funding, lt]);
 
-  const toggleSave = (id: string) => {
-    setSavedIds((prev) => { const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next; });
-  };
+  
 
   return (
     <PageLayout>
@@ -74,7 +74,16 @@ export default function GrantsPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {filtered.map((grant, i) => (
             <motion.div key={grant.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}>
-              <GrantCard grant={grant} saved={savedIds.has(grant.id)} onSave={() => toggleSave(grant.id)} />
+              <GrantCard
+                grant={grant}
+                saved={savedIds.has(grant.id)}
+                onSave={() =>
+                  toggleSave(grant.id, (added) => {
+                    if (added) toast.success(t("common.save") || "Saved");
+                    else toast.success(t("common.delete") || "Removed");
+                  })
+                }
+              />
             </motion.div>
           ))}
         </div>

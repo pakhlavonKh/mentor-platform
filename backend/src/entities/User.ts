@@ -1,4 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToMany, JoinTable } from "typeorm";
+import { Grant } from "./Grant.js";
 
 @Entity("users")
 export class User {
@@ -19,13 +20,20 @@ export class User {
 
   @Column({
     type: "enum",
-    enum: ["admin", "tutor", "student"],
+    enum: ["admin", "mentor", "student"],
     default: "student",
   })
-  role!: "admin" | "tutor" | "student";
+  role!: "admin" | "mentor" | "student";
 
   @Column({ default: true })
   isActive!: boolean;
+
+  @Column({ type: "text", nullable: true })
+  profilePicture?: string | null;
+
+  @ManyToMany(() => Grant, { eager: false })
+  @JoinTable({ name: "user_saved_grants" })
+  savedGrants?: Grant[];
 
   @CreateDateColumn()
   createdAt!: Date;

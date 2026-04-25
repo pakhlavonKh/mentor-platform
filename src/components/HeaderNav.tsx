@@ -37,7 +37,9 @@ export function HeaderNav() {
 
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-1 relative">
-            {NAV_ITEMS.map((item) => {
+            {NAV_ITEMS
+              .filter((item) => item.path !== "/learn" || isLoggedIn)
+              .map((item) => {
               const isActive = location.pathname === item.path;
 
               return (

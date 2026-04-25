@@ -12,7 +12,7 @@ import { toast } from "sonner";
 export default function LoginPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, user } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -25,7 +25,10 @@ export default function LoginPage() {
     try {
       await login(email, password);
       toast.success(t("auth.loginSuccess"));
-      navigate("/");
+      const role = (user && user.role) || localStorage.getItem("userData") ? JSON.parse(localStorage.getItem("userData") || "null")?.role : null;
+      if (role === "admin") navigate("/admin");
+      else if (role === "mentor") navigate("/mentor");
+      else navigate("/");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : t("auth.loginError"));
     } finally {
