@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, Circle, PlayCircle, FileText, ListChecks } from "lucide-react";
 import type { LearningContent } from "@/lib/api";
 import { useLocale } from "@/hooks/use-locale";
+import { Link } from "react-router-dom";
 
 interface LearningCardProps {
   content: LearningContent;
@@ -19,7 +20,8 @@ const typeIcon = (type: string) => {
 
 export function LearningCard({ content, onClick }: LearningCardProps) {
   const { lt } = useLocale();
-  return (
+
+  const card = (
     <Card
       className="group shadow-soft hover:shadow-hover transition-all duration-300 cursor-pointer border border-border/60 hover:border-primary/30 rounded-2xl"
       onClick={onClick}
@@ -45,5 +47,13 @@ export function LearningCard({ content, onClick }: LearningCardProps) {
         </div>
       </CardContent>
     </Card>
+  );
+
+  if (onClick) return card;
+
+  return (
+    <Link to={`/learn/${content.id}`} aria-label={lt(content.title)}>
+      {card}
+    </Link>
   );
 }

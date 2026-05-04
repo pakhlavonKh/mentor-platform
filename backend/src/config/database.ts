@@ -5,6 +5,8 @@ import { LearningContent } from "../entities/LearningContent.js";
 import { TelegramPost } from "../entities/TelegramPost.js";
 import { PricingPlan } from "../entities/PricingPlan.js";
 import { User } from "../entities/User.js";
+import { Submission } from "../entities/Submission.js";
+import { Order } from "../entities/Order.js";
 
 const isProduction = process.env.NODE_ENV === "production";
 
@@ -15,7 +17,7 @@ export const AppDataSource = new DataSource({
   username: process.env.DB_USER || "postgres",
   password: process.env.DB_PASSWORD || "password",
   database: process.env.DB_NAME || "yerkenaz",
-  entities: [Grant, LearningContent, TelegramPost, PricingPlan, User],
+  entities: [Grant, LearningContent, TelegramPost, PricingPlan, User, Submission, Order],
   synchronize: !isProduction,
   logging: !isProduction,
   ssl: isProduction,

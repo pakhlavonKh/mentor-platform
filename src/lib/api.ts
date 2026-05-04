@@ -51,6 +51,11 @@ export const api = {
         method: "POST",
         body: JSON.stringify({ email, password, firstName, lastName }),
       }),
+    google: (idToken: string) =>
+      request<AuthResponse>("/auth/google", {
+        method: "POST",
+        body: JSON.stringify({ idToken }),
+      }),
     profile: () => request<Omit<AuthResponse, "token">>("/auth/profile"),
     update: (payload: Partial<AuthResponse>) => request<Omit<AuthResponse, "token">>(`/auth/profile`, { method: "PUT", body: JSON.stringify(payload) }),
     saveGrant: (grantId: string) => request<{ message: string }>(`/auth/profile/saved/${grantId}`, { method: "POST" }),
@@ -89,6 +94,57 @@ export const api = {
   // ---------- Pricing ----------
   pricing: {
     list: () => request<PricingPlan[]>("/pricing"),
+  },
+  // ---------- Submissions ----------
+  submissions: {
+    upload: (form: FormData) => fetch(`${API_BASE}/submissions`, { method: "POST", body: form, headers: { ...(localStorage.getItem("authToken") ? { Authorization: `Bearer ${localStorage.getItem("authToken")}` } : {}) } }).then(async (r) => {
+      if (!r.ok) throw new Error(await r.text());
+      return r.json();
+    }),
+    list: (params?: Record<string, string>) => {
+      const qs = params ? "?" + new URLSearchParams(params).toString() : "";
+      return request<{ data: Submission[]; pagination: Pagination }>(`/submissions${qs}`);
+    },
+    get: (id: string) => request<Submission>(`/submissions/${id}`),
+    adminList: (params?: Record<string, string>) => {
+      const qs = params ? "?" + new URLSearchParams(params).toString() : "";
+      return request<{ data: Submission[]; pagination: Pagination }>(`/submissions/all${qs}`);
+    },
+    assign: (id: string, reviewerId: string) => request<Submission>(`/submissions/${id}/assign`, { method: "POST", body: JSON.stringify({ reviewerId }) }),
+    claim: (id: string) => request<Submission>(`/submissions/${id}/claim`, { method: "POST" }),
+    unclaim: (id: string) => request<Submission>(`/submissions/${id}/unclaim`, { method: "POST" }),
+    updateStatus: (id: string, status: string) => request<Submission>(`/submissions/${id}/status`, { method: "PUT", body: JSON.stringify({ status }) }),
+    addFeedback: (id: string, feedback: string) => request<Submission>(`/submissions/${id}/feedback`, { method: "POST", body: JSON.stringify({ feedback }) }),
+    reviewerMy: (params?: Record<string, string>) => {
+      const qs = params ? "?" + new URLSearchParams(params).toString() : "";
+      return request<{ data: Submission[]; pagination: Pagination }>(`/submissions/reviewer/my${qs}`);
+    },
+  },
+
+  // ---------- Admin users ----------
+  admin: {
+    listUsers: (params?: Record<string, string>) => {
+      const qs = params ? "?" + new URLSearchParams(params).toString() : "";
+      return request<{ data: User[]; pagination: Pagination }>(`/admin/users/${qs}`.replace(/\/$/, ""));
+    },
+    getUser: (id: string) => request<User>(`/admin/users/${id}`),
+    updateRole: (id: string, role: string) => request<User>(`/admin/users/${id}/role`, { method: "PUT", body: JSON.stringify({ role }) }),
+    deleteUser: (id: string) => request<{ message: string }>(`/admin/users/${id}`, { method: "DELETE" }),
+  },
+  // ---------- Orders ----------
+  orders: {
+    create: (payload: { pricingPlanId: string; price: number; documents: number; submissionIds?: string[] }) =>
+      request<Order>(`/orders`, { method: "POST", body: JSON.stringify(payload) }),
+    list: (params?: Record<string, string>) => {
+      const qs = params ? "?" + new URLSearchParams(params).toString() : "";
+      return request<{ data: Order[]; pagination: Pagination }>(`/orders${qs}`);
+    },
+    get: (id: string) => request<Order>(`/orders/${id}`),
+    adminList: (params?: Record<string, string>) => {
+      const qs = params ? "?" + new URLSearchParams(params).toString() : "";
+      return request<{ data: Order[]; pagination: Pagination }>(`/orders/all${qs}`);
+    },
+    updateStatus: (id: string, status: string) => request<Order>(`/orders/${id}/status`, { method: "PUT", body: JSON.stringify({ status }) }),
   },
 };
 
@@ -149,4 +205,40 @@ export interface Pagination {
   limit: number;
   total: number;
   pages: number;
+}
+
+export interface User {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  role: "admin" | "mentor" | "student" | "tutor";
+  profilePicture?: string | null;
+}
+
+export interface Submission {
+  id: string;
+  userId: string;
+  user?: User;
+  reviewerId?: string | null;
+  reviewer?: User | null;
+  learningContentId?: string | null;
+  files: { filename: string; originalName: string; size: number; mimeType: string; path: string; url?: string }[];
+  status: "pending" | "in_review" | "completed" | "rejected";
+  feedback?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Order {
+  id: string;
+  userId: string;
+  user?: User;
+  pricingPlanId: string;
+  submissionIds?: string[] | null;
+  price: number;
+  documents: number;
+  status: "pending" | "in_review" | "completed" | "failed";
+  createdAt: string;
+  updatedAt: string;
 }

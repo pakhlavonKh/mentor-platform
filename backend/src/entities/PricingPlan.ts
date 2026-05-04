@@ -8,16 +8,16 @@ export class PricingPlan {
   @Column("jsonb")
   name!: { en: string; ru: string; kz: string };
 
-  @Column()
+  @Column({ type: "int" })
   documents!: number;
 
-  @Column()
+  @Column({ type: "numeric", default: 0 })
   price!: number;
 
   @Column("jsonb")
   features!: { en: string[]; ru: string[]; kz: string[] };
 
-  @Column({ default: false })
+  @Column({ type: "boolean", default: false })
   popular!: boolean;
 
   @Column({ type: "timestamp", default: () => "CURRENT_TIMESTAMP" })

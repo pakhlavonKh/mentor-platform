@@ -8,6 +8,10 @@ import learningRouter from "./routes/learning.js";
 import telegramRouter from "./routes/telegram.js";
 import pricingRouter from "./routes/pricing.js";
 import authRouter from "./routes/auth.js";
+import submissionsRouter from "./routes/submissions.js";
+import adminUsersRouter from "./routes/adminUsers.js";
+import ordersRouter from "./routes/orders.js";
+import path from "path";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -33,6 +37,18 @@ app.use("/api/learning", learningRouter);
 app.use("/api/telegram", telegramRouter);
 app.use("/api/pricing", pricingRouter);
 app.use("/api/auth", authRouter);
+
+// serve uploaded files
+app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
+
+// submissions
+app.use("/api/submissions", submissionsRouter);
+
+// orders
+app.use("/api/orders", ordersRouter);
+
+// admin routes
+app.use("/api/admin/users", adminUsersRouter);
 
 // Error handling middleware
 app.use((err: unknown, req: Request, res: Response, next: NextFunction) => {

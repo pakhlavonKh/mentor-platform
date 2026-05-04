@@ -11,12 +11,17 @@ import HomePage from "./pages/HomePage";
 import GrantsPage from "./pages/GrantsPage";
 import TelegramPage from "./pages/TelegramPage";
 import LearnPage from "./pages/LearnPage";
+import LearningDetail from "./pages/LearningDetail";
 import PricingPage from "./pages/PricingPage";
 import ProfilePage from "./pages/ProfilePage";
 import LoginPage from "./pages/LoginPage";
 import SignUpPage from "./pages/SignUpPage";
 import AdminDashboard from "./pages/AdminDashboard";
 import MentorDashboard from "./pages/MentorDashboard";
+import AdminUsers from "./pages/AdminUsers";
+import AdminSubmissions from "./pages/AdminSubmissions";
+import TutorsPage from "./pages/TutorsPage";
+import CheckoutPage from "./pages/CheckoutPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -40,6 +45,7 @@ function AppContent() {
           <Route path="/grants" element={<GrantsPage />} />
           <Route path="/telegram" element={<TelegramPage />} />
           <Route path="/learn" element={isLoggedIn ? <LearnPage /> : <Navigate to="/login" replace />} />
+          <Route path="/learn/:id" element={isLoggedIn ? <LearningDetail /> : <Navigate to="/login" replace />} />
           <Route
             path="/admin"
             element={isLoggedIn && user?.role === "admin" ? <AdminDashboard /> : <Navigate to="/login" replace />}
@@ -50,7 +56,11 @@ function AppContent() {
             element={isLoggedIn && user?.role === "mentor" ? <MentorDashboard /> : <Navigate to="/login" replace />}
           />
           <Route path="/pricing" element={<PricingPage />} />
+          <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/admin/users" element={<AdminUsers />} />
+          <Route path="/admin/submissions" element={<AdminSubmissions />} />
+          <Route path="/admin/tutors" element={<TutorsPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignUpPage />} />
           <Route path="*" element={<NotFound />} />

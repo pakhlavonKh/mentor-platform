@@ -8,7 +8,7 @@ export class Grant {
   @Column("jsonb")
   title!: { en: string; ru: string; kz: string };
 
-  @Column()
+  @Column({ type: "varchar" })
   country!: string;
 
   @Column({
@@ -23,13 +23,13 @@ export class Grant {
   })
   funding!: "full" | "partial";
 
-  @Column()
+  @Column({ type: "varchar" })
   deadline!: string;
 
   @Column("jsonb")
   description!: { en: string; ru: string; kz: string };
 
-  @Column()
+  @Column({ type: "varchar" })
   link!: string;
 
   @Column({ type: "timestamp", default: () => "CURRENT_TIMESTAMP" })

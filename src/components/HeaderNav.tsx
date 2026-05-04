@@ -19,7 +19,7 @@ const NAV_ITEMS = [
 export function HeaderNav() {
   const location = useLocation();
   const { t } = useTranslation();
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, user } = useAuth();
   const [open, setOpen] = useState(false);
 
   return (
@@ -37,8 +37,9 @@ export function HeaderNav() {
 
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-1 relative">
-            {NAV_ITEMS
+            {(NAV_ITEMS
               .filter((item) => item.path !== "/learn" || isLoggedIn)
+              .concat(user?.role === "admin" ? [{ labelKey: "admin.dashboardTitle", path: "/admin" }] : [])
               .map((item) => {
               const isActive = location.pathname === item.path;
 
@@ -75,7 +76,7 @@ export function HeaderNav() {
                   </span>
                 </Link>
               );
-            })}
+            }))}
           </nav>
 
           {/* Right side */}

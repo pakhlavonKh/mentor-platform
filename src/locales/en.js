@@ -191,6 +191,9 @@ export const en = {
     grantUpdated: "Grant updated",
     grantDeleted: "Grant deleted",
     confirmDelete: "Are you sure you want to delete this grant?",
+    users: "Users",
+    submissions: "Submissions",
+    tutors: "Tutors",
   },
   errors: {
     notFound: "Oops! Page not found",

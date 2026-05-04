@@ -30,10 +30,10 @@ const seedDatabase = async () => {
     const hashedPassword = await bcrypt.hash("admin123", 10);
     await userRepository.save([
       { email: "admin@studyqadam.kz", password: hashedPassword, firstName: "Admin", lastName: "User", role: "admin" as const },
-      { email: "mentor@studyqadam.kz", password: hashedPassword, firstName: "Mentor", lastName: "User", role: "mentor" as const },
+      { email: "mentor@studyqadam.kz", password: hashedPassword, firstName: "Mentor", lastName: "User", role: "tutor" as const },
       { email: "student@studyqadam.kz", password: hashedPassword, firstName: "Student", lastName: "User", role: "student" as const },
     ]);
-    console.log("✓ Users seeded (admin, mentor, student) — password: admin123");
+    console.log("✓ Users seeded (admin, tutor, student) — password: admin123");
 
     // Seed grants
     const grants = [

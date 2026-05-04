@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/context/AuthContext";
@@ -12,7 +12,7 @@ import { toast } from "sonner";
 export default function LoginPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { login, user } = useAuth();
+  const { login, user, googleLogin } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -35,6 +35,42 @@ export default function LoginPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    if (!clientId) return;
+    const existing = document.getElementById("gsi-script");
+    if (existing) return;
+    const script = document.createElement("script");
+    script.src = "https://accounts.google.com/gsi/client";
+    script.async = true;
+    script.id = "gsi-script";
+    script.onload = () => {
+      // initialize the Google Identity Services client
+      // @ts-ignore
+      if (window.google && window.google.accounts && window.google.accounts.id) {
+        // @ts-ignore
+        window.google.accounts.id.initialize({
+          client_id: clientId,
+          callback: async (resp: any) => {
+            if (!resp?.credential) return;
+            try {
+              if (googleLogin) await googleLogin(resp.credential);
+              toast.success(t("auth.loginSuccess"));
+              const role = (user && user.role) || localStorage.getItem("userData") ? JSON.parse(localStorage.getItem("userData") || "null")?.role : null;
+              if (role === "admin") navigate("/admin");
+              else if (role === "mentor") navigate("/mentor");
+              else navigate("/");
+            } catch (err) {
+              toast.error("Google sign-in failed");
+            }
+          },
+        });
+      }
+    };
+    document.head.appendChild(script);
+    return () => { try { document.head.removeChild(script); } catch {} };
+  }, [googleLogin, navigate, t, user]);
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4 py-12">
@@ -139,6 +175,15 @@ export default function LoginPage() {
                 type="button"
                 variant="outline"
                 className="w-full rounded-lg h-10"
+                onClick={() => {
+                  // @ts-ignore
+                  if (window.google && window.google.accounts && window.google.accounts.id) {
+                    // @ts-ignore
+                    window.google.accounts.id.prompt();
+                  } else {
+                    toast.error("Google Sign-In not initialized");
+                  }
+                }}
               >
                 Continue with Google
               </Button>

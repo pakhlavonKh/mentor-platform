@@ -19,6 +19,7 @@ interface AuthContextType {
   signup: (email: string, password: string, firstName: string, lastName: string) => Promise<void>;
   updateProfile: (payload: Partial<User>) => Promise<void>;
   logout: () => void;
+  googleLogin?: (idToken: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -75,6 +76,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoggedIn(true);
   };
 
+  const googleLogin = async (idToken: string) => {
+    const data: AuthResponse = await api.auth.google(idToken);
+    const userData: User = {
+      id: data.id,
+      email: data.email,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      role: data.role,
+      profilePicture: data.profilePicture,
+      savedGrants: (data as AuthResponse).savedGrants || [],
+    };
+    localStorage.setItem("authToken", data.token);
+    localStorage.setItem("userData", JSON.stringify(userData));
+    setUser(userData);
+    setIsLoggedIn(true);
+  };
+
   const updateProfile = async (payload: Partial<User>) => {
     const data = await api.auth.update(payload as Partial<AuthResponse>);
     const userData: User = {
@@ -115,7 +133,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoggedIn, login, signup, updateProfile, logout }}>
+    <AuthContext.Provider value={{ user, isLoggedIn, login, signup, updateProfile, logout, googleLogin }}>
       {children}
     </AuthContext.Provider>
   );

@@ -4,6 +4,7 @@ import { AppDataSource } from "../config/database.js";
 import { User } from "../entities/User.js";
 import { Grant } from "../entities/Grant.js";
 import { generateToken } from "../middleware/auth.js";
+import { OAuth2Client } from "google-auth-library";
 
 const userRepository = AppDataSource.getRepository(User);
 
@@ -202,5 +203,59 @@ export const removeSavedGrant = async (req: Request, res: Response) => {
   } catch (error: unknown) {
     console.error(error);
     res.status(500).json({ message: "Error removing saved grant" });
+  }
+};
+
+export const googleOauth = async (req: Request, res: Response) => {
+  try {
+    const { idToken } = req.body;
+    if (!idToken) return res.status(400).json({ message: "Missing idToken" });
+
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    if (!clientId) return res.status(500).json({ message: "Google client ID not configured" });
+
+    const client = new OAuth2Client(clientId);
+    const ticket = await client.verifyIdToken({ idToken, audience: clientId });
+    const payload = ticket.getPayload();
+    if (!payload || !payload.email) return res.status(400).json({ message: "Invalid Google token" });
+
+    const email = payload.email;
+    const firstName = payload.given_name || payload.name?.split(" ")?.[0] || "";
+    const lastName = payload.family_name || payload.name?.split(" ")?.slice(1).join(" ") || "";
+    const picture = payload.picture || null;
+
+    let user = await userRepository.findOne({ where: { email } });
+    if (!user) {
+      user = userRepository.create({
+        email,
+        password: "",
+        firstName: firstName || "",
+        lastName: lastName || "",
+        role: "student",
+        profilePicture: picture,
+      });
+      user = await userRepository.save(user);
+    } else {
+      // update profile picture if missing
+      if ((!user.profilePicture || user.profilePicture === "") && picture) {
+        user.profilePicture = picture;
+        await userRepository.save(user);
+      }
+    }
+
+    const token = generateToken(user.id);
+
+    res.json({
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      role: user.role,
+      profilePicture: user.profilePicture || null,
+      token,
+    });
+  } catch (error) {
+    console.error("Google OAuth error:", error);
+    res.status(500).json({ message: "Error verifying Google token" });
   }
 };

@@ -180,6 +180,11 @@ export const kz = {
     purchaseReview: "Бастау үшін рецензия пакетін сатып алыңыз",
     viewPackages: "Пакеттерді қарау",
   },
+  admin: {
+    users: "Пайдаланушылар",
+    submissions: "Ұсынымдар",
+    tutors: "Тьюторлар",
+  },
   errors: {
     notFound: "Оайй! Бет табылмады",
     notFoundCode: "404",

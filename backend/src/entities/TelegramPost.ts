@@ -11,13 +11,13 @@ export class TelegramPost {
   @Column("jsonb")
   description!: { en: string; ru: string; kz: string };
 
-  @Column()
+  @Column({ type: "varchar" })
   source!: string;
 
-  @Column()
+  @Column({ type: "varchar" })
   link!: string;
 
-  @Column()
+  @Column({ type: "varchar" })
   date!: string;
 
   @Column({ type: "timestamp", default: () => "CURRENT_TIMESTAMP" })

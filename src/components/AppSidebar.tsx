@@ -2,6 +2,7 @@ import { LayoutDashboard, GraduationCap, Send, BookOpen, CreditCard, User, Globe
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
+import { useTranslation } from "react-i18next";
 import {
   Sidebar,
   SidebarContent,
@@ -17,22 +18,23 @@ import {
 } from "@/components/ui/sidebar";
 
 const mainItems = [
-  { title: "Dashboard", url: "/", icon: LayoutDashboard },
-  { title: "Grants", url: "/grants", icon: GraduationCap },
-  { title: "Telegram", url: "/telegram", icon: Send },
-  { title: "Learning", url: "/learn", icon: BookOpen },
-  { title: "Pricing", url: "/pricing", icon: CreditCard },
+  { key: "common.home", url: "/", icon: LayoutDashboard },
+  { key: "common.grants", url: "/grants", icon: GraduationCap },
+  { key: "common.telegram", url: "/telegram", icon: Send },
+  { key: "common.learning", url: "/learn", icon: BookOpen },
+  { key: "common.pricing", url: "/pricing", icon: CreditCard },
 ];
 
 const bottomItems = [
-  { title: "Profile", url: "/profile", icon: User },
+  { key: "common.profile", url: "/profile", icon: User },
 ];
 
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, user } = useAuth();
+  const { t } = useTranslation();
   const isActive = (path: string) => location.pathname === path;
 
   return (
@@ -60,15 +62,44 @@ export function AppSidebar() {
               {mainItems
                 .filter((item) => item.url !== "/learn" || isLoggedIn)
                 .map((item) => (
-                <SidebarMenuItem key={item.title}>
+                <SidebarMenuItem key={item.url}>
                   <SidebarMenuButton asChild isActive={isActive(item.url)}>
                     <NavLink to={item.url} end className="hover:bg-sidebar-accent/50" activeClassName="bg-sidebar-accent text-sidebar-primary font-medium">
                       <item.icon className="mr-2 h-4 w-4" />
-                      {!collapsed && <span>{item.title}</span>}
+                      {!collapsed && <span>{t(item.key)}</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+
+              {user?.role === "admin" && (
+                <>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={isActive("/admin/users")}>
+                      <NavLink to="/admin/users" end className="hover:bg-sidebar-accent/50" activeClassName="bg-sidebar-accent text-sidebar-primary font-medium">
+                        <User className="mr-2 h-4 w-4" />
+                        {!collapsed && <span>{t("admin.users")}</span>}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={isActive("/admin/submissions")}>
+                      <NavLink to="/admin/submissions" end className="hover:bg-sidebar-accent/50" activeClassName="bg-sidebar-accent text-sidebar-primary font-medium">
+                        <GlobeLock className="mr-2 h-4 w-4" />
+                        {!collapsed && <span>{t("profile.submissions")}</span>}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={isActive("/admin/tutors")}>
+                      <NavLink to="/admin/tutors" end className="hover:bg-sidebar-accent/50" activeClassName="bg-sidebar-accent text-sidebar-primary font-medium">
+                        <GraduationCap className="mr-2 h-4 w-4" />
+                        {!collapsed && <span>{t("admin.tutors")}</span>}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </>
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -77,11 +108,11 @@ export function AppSidebar() {
       <SidebarFooter>
         <SidebarMenu>
           {bottomItems.map((item) => (
-            <SidebarMenuItem key={item.title}>
+            <SidebarMenuItem key={item.url}>
               <SidebarMenuButton asChild isActive={isActive(item.url)}>
                 <NavLink to={item.url} end className="hover:bg-sidebar-accent/50" activeClassName="bg-sidebar-accent text-sidebar-primary font-medium">
                   <item.icon className="mr-2 h-4 w-4" />
-                  {!collapsed && <span>{item.title}</span>}
+                  {!collapsed && <span>{t(item.key)}</span>}
                 </NavLink>
               </SidebarMenuButton>
             </SidebarMenuItem>

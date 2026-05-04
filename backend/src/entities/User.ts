@@ -6,26 +6,26 @@ export class User {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
 
-  @Column({ unique: true })
+  @Column({ type: "varchar", unique: true })
   email!: string;
 
-  @Column()
+  @Column({ type: "varchar" })
   password!: string;
 
-  @Column()
+  @Column({ type: "varchar" })
   firstName!: string;
 
-  @Column()
+  @Column({ type: "varchar" })
   lastName!: string;
 
   @Column({
     type: "enum",
-    enum: ["admin", "mentor", "student"],
+    enum: ["admin", "tutor", "student"],
     default: "student",
   })
-  role!: "admin" | "mentor" | "student";
+  role!: "admin" | "student" | "tutor";
 
-  @Column({ default: true })
+  @Column({ type: "boolean", default: true })
   isActive!: boolean;
 
   @Column({ type: "text", nullable: true })

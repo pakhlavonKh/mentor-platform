@@ -20,10 +20,10 @@ export class LearningContent {
   @Column("jsonb")
   description!: { en: string; ru: string; kz: string };
 
-  @Column()
+  @Column({ type: "varchar" })
   duration!: string;
 
-  @Column({ default: false })
+  @Column({ type: "boolean", default: false })
   completed!: boolean;
 
   @Column({ type: "timestamp", default: () => "CURRENT_TIMESTAMP" })

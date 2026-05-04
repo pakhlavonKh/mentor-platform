@@ -12,12 +12,13 @@ import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { User, Mail, BookOpen, Bookmark, FileCheck, CreditCard, Clock, CheckCircle2, LogOut, ArrowRight, Camera } from "lucide-react";
-import { api, type LearningContent, type Grant } from "@/lib/api";
+import { api, type LearningContent, type Grant, type Submission, type Order } from "@/lib/api";
 import { useLocale } from "@/hooks/use-locale";
 import { GrantCard } from "@/components/GrantCard";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import useSavedGrants from "@/hooks/use-saved-grants";
+
 
 export default function ProfilePage() {
   const { user, isLoggedIn, logout, updateProfile } = useAuth();
@@ -36,10 +37,16 @@ export default function ProfilePage() {
   const completed = learning.filter((l) => l.completed).length;
   const progress = learning.length ? Math.round((completed / learning.length) * 100) : 0;
 
+  const [submissions, setSubmissions] = useState<Submission[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
+
   useEffect(() => {
     if (!isLoggedIn) {
       navigate("/login");
     }
+    // fetch submissions and orders
+    api.submissions.list().then((res) => setSubmissions(res.data)).catch(() => {});
+    api.orders.list().then((res) => setOrders(res.data)).catch(() => {});
   }, [isLoggedIn, navigate]);
 
   // initialize edit state from user (safe defaults if user is not yet loaded)
@@ -189,8 +196,8 @@ export default function ProfilePage() {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {[
               { icon: <Bookmark className="h-5 w-5" />, label: t("profile.savedGrants"), value: String(savedIds.size) },
-              { icon: <FileCheck className="h-5 w-5" />, label: t("profile.submissions"), value: String(0) },
-              { icon: <CreditCard className="h-5 w-5" />, label: t("profile.documentReviews"), value: String(0) },
+              { icon: <FileCheck className="h-5 w-5" />, label: t("profile.submissions"), value: String(submissions.length) },
+              { icon: <CreditCard className="h-5 w-5" />, label: t("profile.documentReviews"), value: String(orders.length) },
               { icon: <BookOpen className="h-5 w-5" />, label: t("learning.overallProgress"), value: `${progress}%` },
             ].map((stat) => (
               <Card key={stat.label} className="shadow-soft border border-border/60">
@@ -274,13 +281,71 @@ export default function ProfilePage() {
               <h3 className="font-display font-semibold text-lg text-card-foreground">{t("profile.documentReviews")}</h3>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-8">
-                <FileCheck className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />
-                <p className="text-muted-foreground">{t("profile.noReviews")}</p>
-                <p className="text-sm text-muted-foreground mt-1">{t("profile.purchaseReview")}</p>
-                <Button variant="outline" className="mt-4 rounded-full" asChild>
-                  <a href="/pricing">{t("profile.viewPackages")}</a>
-                </Button>
+              <div className="space-y-4">
+                <div className="grid gap-3">
+                      <div className="p-3 border rounded">
+                        <div className="font-medium mb-2">Upload documents for review</div>
+                        <input type="file" multiple onChange={(e) => { /* handled on submit */ }} id="submission-files" />
+                        <div className="mt-3">
+                          <Button onClick={async () => {
+                            const input = document.getElementById("submission-files") as HTMLInputElement | null;
+                            if (!input || !input.files || input.files.length === 0) {
+                              toast.error("Select files to upload");
+                              return;
+                            }
+                            const form = new FormData();
+                            for (let i = 0; i < input.files.length; i++) form.append("files", input.files[i]);
+                            try {
+                              await api.submissions.upload(form);
+                              toast.success("Files uploaded");
+                              const res = await api.submissions.list();
+                              setSubmissions(res.data);
+                            } catch (err) {
+                              const e = err as Error;
+                              toast.error(e.message || "Upload failed");
+                            }
+                          }}>Upload</Button>
+                        </div>
+                      </div>
+                  {submissions.map((s) => (
+                    <div key={s.id} className="p-3 border rounded">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="font-medium">Submitted {new Date(s.createdAt).toLocaleString()}</div>
+                          <div className="text-sm text-muted-foreground">Status: {s.status}</div>
+                        </div>
+                        <div>
+                          <a href={s.files[0]?.url || s.files[0]?.path} target="_blank" rel="noreferrer" className="text-primary underline">Download</a>
+                        </div>
+                      </div>
+                      {s.feedback && <div className="mt-2 text-sm bg-muted p-2 rounded">Feedback: {s.feedback}</div>}
+                    </div>
+                  ))}
+                  {submissions.length === 0 && <div className="text-center py-8">
+                    <FileCheck className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />
+                    <p className="text-muted-foreground">{t("profile.noReviews")}</p>
+                    <p className="text-sm text-muted-foreground mt-1">{t("profile.purchaseReview")}</p>
+                    <Button variant="outline" className="mt-4 rounded-full" asChild>
+                      <a href="/pricing">{t("profile.viewPackages")}</a>
+                    </Button>
+                  </div>}
+                </div>
+                <div>
+                  <h4 className="font-semibold">Your Orders</h4>
+                  <div className="space-y-2 mt-2">
+                    {orders.map((o) => (
+                      <div key={o.id} className="p-3 border rounded flex items-center justify-between">
+                        <div>
+                          <div className="font-medium">Order: {o.id}</div>
+                          <div className="text-sm text-muted-foreground">Status: {o.status} — {o.documents} docs — {o.price}</div>
+                        </div>
+                        <div>
+                          <a href={`/profile`} className="text-primary underline">View</a>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>

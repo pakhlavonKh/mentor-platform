@@ -180,6 +180,11 @@ export const ru = {
     purchaseReview: "Приобретите пакет рецензирования для начала",
     viewPackages: "Просмотреть пакеты",
   },
+  admin: {
+    users: "Пользователи",
+    submissions: "Заявки",
+    tutors: "Преподаватели",
+  },
   errors: {
     notFound: "Упс! Страница не найдена",
     notFoundCode: "404",

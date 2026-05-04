@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "type": "module",
   "scripts": {
-    "dev": "node --loader ts-node/esm src/index.ts",
+    "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
     "typeorm": "typeorm",
@@ -21,9 +21,12 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
+    "google-auth-library": "^9.0.0",
     "jsonwebtoken": "^9.0.2",
+    "multer": "^2.1.1",
+    "nodemailer": "^8.0.6",
     "pg": "^8.11.3",
-    "typeorm": "^0.3.19"
+    "typeorm": "^0.3.17"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
@@ -32,6 +35,8 @@
     "@types/jsonwebtoken": "^9.0.7",
     "@types/node": "^20.11.19",
     "ts-node": "^10.9.2",
+    "ts-node-dev": "^2.0.0",
+    "tsx": "^3.12.7",
     "typescript": "^5.3.3"
   }
 }
