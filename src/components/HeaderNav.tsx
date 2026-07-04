@@ -11,6 +11,8 @@ import { useAuth } from "@/context/AuthContext";
 const NAV_ITEMS = [
   { labelKey: "common.home", path: "/" },
   { labelKey: "common.grants", path: "/grants" },
+  { labelKey: "common.summerPrograms", path: "/summer-programs" },
+  { labelKey: "common.foundations", path: "/foundations" },
   { labelKey: "common.telegram", path: "/telegram" },
   { labelKey: "common.learning", path: "/learn" },
   { labelKey: "common.pricing", path: "/pricing" },

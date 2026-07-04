@@ -89,6 +89,22 @@ export const api = {
       const qs = params ? "?" + new URLSearchParams(params).toString() : "";
       return request<{ data: TelegramPost[]; pagination: Pagination }>(`/telegram${qs}`);
     },
+    config: () => request<{ telegramPhone: string; telegramChannelUrl: string; telegramChannelUsername: string }>("/telegram/config"),
+  },
+
+  // ---------- Calendar ----------
+  calendar: {
+    list: (params?: Record<string, string>) => {
+      const qs = params ? "?" + new URLSearchParams(params).toString() : "";
+      return request<{ data: CalendarEvent[]; pagination: Pagination }>(`/calendar${qs}`);
+    },
+    personal: (params?: Record<string, string>) => {
+      const qs = params ? "?" + new URLSearchParams(params).toString() : "";
+      return request<{ data: CalendarItem[] }>(`/calendar/personal${qs}`);
+    },
+    create: (payload: Partial<CalendarEvent>) => request<CalendarEvent>(`/calendar`, { method: "POST", body: JSON.stringify(payload) }),
+    update: (id: string, payload: Partial<CalendarEvent>) => request<CalendarEvent>(`/calendar/${id}`, { method: "PUT", body: JSON.stringify(payload) }),
+    delete: (id: string) => request<{ message: string }>(`/calendar/${id}`, { method: "DELETE" }),
   },
 
   // ---------- Pricing ----------
@@ -130,6 +146,19 @@ export const api = {
     getUser: (id: string) => request<User>(`/admin/users/${id}`),
     updateRole: (id: string, role: string) => request<User>(`/admin/users/${id}/role`, { method: "PUT", body: JSON.stringify({ role }) }),
     deleteUser: (id: string) => request<{ message: string }>(`/admin/users/${id}`, { method: "DELETE" }),
+    // Mentor management
+    listMentors: (params?: Record<string, string>) => {
+      const qs = params ? "?" + new URLSearchParams(params).toString() : "";
+      return request<{ data: User[]; pagination: Pagination }>(`/admin/users/mentors/list${qs}`);
+    },
+    createMentor: (payload: { email: string; firstName: string; lastName: string; password: string }) =>
+      request<{ message: string; mentor: User }>(`/admin/users/mentors`, { method: "POST", body: JSON.stringify(payload) }),
+    deactivateMentor: (id: string) => request<{ message: string; mentor: User }>(`/admin/users/mentors/${id}/deactivate`, { method: "PUT", body: JSON.stringify({}) }),
+    reactivateMentor: (id: string) => request<{ message: string; mentor: User }>(`/admin/users/mentors/${id}/reactivate`, { method: "PUT", body: JSON.stringify({}) }),
+    deleteMentor: (id: string) => request<{ message: string }>(`/admin/users/mentors/${id}`, { method: "DELETE" }),
+    // Student management
+    deactivateStudent: (id: string) => request<{ message: string; user: User }>(`/admin/users/students/${id}/deactivate`, { method: "PUT", body: JSON.stringify({}) }),
+    reactivateStudent: (id: string) => request<{ message: string; user: User }>(`/admin/users/students/${id}/reactivate`, { method: "PUT", body: JSON.stringify({}) }),
   },
   // ---------- Orders ----------
   orders: {
@@ -148,6 +177,23 @@ export const api = {
   },
 };
 
+export async function downloadAuthenticatedFile(fileUrl: string, filename: string) {
+  const base = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+  const serverRoot = base.replace(/\/api\/?$/, "");
+  const fullUrl = fileUrl.startsWith("http") ? fileUrl : `${serverRoot}${fileUrl}`;
+  const token = localStorage.getItem("authToken");
+  const res = await fetch(fullUrl, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  if (!res.ok) throw new Error("Download failed");
+  const blob = await res.blob();
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
 // ---------- Shared types ----------
 export interface LocalizedText {
   en: string;
@@ -165,7 +211,7 @@ export interface Grant {
   id: string;
   title: LocalizedText;
   country: string;
-  type: "bachelor" | "master" | "internship" | "phd";
+  type: "bachelor" | "master" | "internship" | "phd" | "summer_program" | "foundation";
   funding: "full" | "partial";
   deadline: string;
   description: LocalizedText;
@@ -241,4 +287,25 @@ export interface Order {
   status: "pending" | "in_review" | "completed" | "failed";
   createdAt: string;
   updatedAt: string;
+}
+
+export type CalendarCategory = "grant_deadline" | "event" | "application" | "platform";
+
+export interface CalendarEvent {
+  id: string;
+  title: LocalizedText;
+  description?: LocalizedText | null;
+  date: string;
+  category: CalendarCategory;
+  link?: string | null;
+}
+
+export interface CalendarItem {
+  id: string;
+  title: LocalizedText | string;
+  description?: LocalizedText | null;
+  date: string;
+  category: CalendarCategory;
+  link?: string | null;
+  source?: "platform" | "grant";
 }

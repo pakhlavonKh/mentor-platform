@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { AppDataSource } from "../config/database.js";
 import { User } from "../entities/User.js";
+import { config } from "../config/env.js";
 
 export interface AuthRequest extends Request {
   userId?: string;
@@ -15,7 +16,7 @@ export const authenticate = (req: AuthRequest, res: Response, next: NextFunction
       return res.status(401).json({ message: "No token provided" });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || "your-secret-key") as {
+    const decoded = jwt.verify(token, config.jwt.secret) as {
       userId: string;
     };
     req.userId = decoded.userId;
@@ -41,13 +42,13 @@ export const authorizeRole = (...allowedRoles: Array<string>) => {
 
       next();
     } catch (error) {
-      return res.status(500).json({ message: "Authorization error", error });
+      return res.status(500).json({ message: "Authorization error" });
     }
   };
 };
 
 export const generateToken = (userId: string): string => {
-  return jwt.sign({ userId }, process.env.JWT_SECRET || "your-secret-key", {
+  return jwt.sign({ userId }, config.jwt.secret, {
     expiresIn: "7d",
   });
 };

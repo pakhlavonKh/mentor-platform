@@ -1,6 +1,9 @@
 import { Request, Response } from "express";
+import type { File as MulterFile } from "multer";
 import { AppDataSource } from "../config/database.js";
 import { LearningContent } from "../entities/LearningContent.js";
+
+const errorMessage = (error: unknown) => (error instanceof Error ? error.message : "Unexpected error");
 
 const learningRepository = AppDataSource.getRepository(LearningContent);
 
@@ -32,7 +35,7 @@ export const getLearningContent = async (req: Request, res: Response) => {
       },
     });
   } catch (error) {
-    res.status(500).json({ message: "Error fetching learning content", error });
+    res.status(500).json({ message: "Error fetching learning content", error: errorMessage(error) });
   }
 };
 
@@ -47,13 +50,21 @@ export const getLearningContentById = async (req: Request, res: Response) => {
 
     res.json(content);
   } catch (error) {
-    res.status(500).json({ message: "Error fetching learning content", error });
+    res.status(500).json({ message: "Error fetching learning content", error: errorMessage(error) });
   }
 };
 
 export const createLearningContent = async (req: Request, res: Response) => {
   try {
-    const { title, type, topic, description, duration } = req.body;
+    const { title, type, topic, description, duration, thumbnailUrl } = req.body;
+    const file = (req as Request & { file?: MulterFile }).file;
+
+    if (!file) {
+      return res.status(400).json({ message: "File is required" });
+    }
+
+    const fileUrl = `/uploads/learning/${file.filename}`;
+    const mimeType = file.mimetype;
 
     const content = learningRepository.create({
       title,
@@ -61,12 +72,15 @@ export const createLearningContent = async (req: Request, res: Response) => {
       topic,
       description,
       duration,
+      fileUrl,
+      mimeType,
+      thumbnailUrl: thumbnailUrl || null,
     });
 
     const result = await learningRepository.save(content);
     res.status(201).json(result);
   } catch (error) {
-    res.status(400).json({ message: "Error creating learning content", error });
+    res.status(400).json({ message: "Error creating learning content", error: errorMessage(error) });
   }
 };
 
@@ -80,7 +94,7 @@ export const updateLearningContent = async (req: Request, res: Response) => {
 
     res.json(content);
   } catch (error) {
-    res.status(400).json({ message: "Error updating learning content", error });
+    res.status(400).json({ message: "Error updating learning content", error: errorMessage(error) });
   }
 };
 
@@ -91,6 +105,6 @@ export const deleteLearningContent = async (req: Request, res: Response) => {
     await learningRepository.delete(id);
     res.json({ message: "Learning content deleted successfully" });
   } catch (error) {
-    res.status(500).json({ message: "Error deleting learning content", error });
+    res.status(500).json({ message: "Error deleting learning content", error: errorMessage(error) });
   }
 };

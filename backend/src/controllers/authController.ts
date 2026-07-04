@@ -5,19 +5,22 @@ import { User } from "../entities/User.js";
 import { Grant } from "../entities/Grant.js";
 import { generateToken } from "../middleware/auth.js";
 import { OAuth2Client } from "google-auth-library";
+import { config } from "../config/env.js";
+
+const errorMessage = (error: unknown) => (error instanceof Error ? error.message : "Unexpected error");
 
 const userRepository = AppDataSource.getRepository(User);
 
 export const register = async (req: Request, res: Response) => {
   try {
-    const { email, password, firstName, lastName, role } = req.body;
+    const { email, password, firstName, lastName } = req.body;
 
     if (!email || !password || !firstName || !lastName) {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
-    const validRoles = ["admin", "mentor", "student"];
-    const userRole = validRoles.includes(role) ? role : "student";
+    // Public registration always creates student accounts; roles are assigned by admins only.
+    const userRole = "student" as const;
 
     const existingUser = await userRepository.findOne({ where: { email } });
     if (existingUser) {
@@ -47,7 +50,7 @@ export const register = async (req: Request, res: Response) => {
       token,
     });
   } catch (error) {
-    res.status(500).json({ message: "Error registering user", error });
+    res.status(500).json({ message: "Error registering user", error: errorMessage(error) });
   }
 };
 
@@ -59,7 +62,10 @@ export const login = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Missing email or password" });
     }
 
-    const user = await userRepository.findOne({ where: { email } });
+    const user = await userRepository.findOne({
+      where: { email },
+      select: ["id", "email", "password", "firstName", "lastName", "role", "isActive", "profilePicture"]
+    });
 
     if (!user) {
       return res.status(401).json({ message: "Invalid credentials" });
@@ -83,7 +89,7 @@ export const login = async (req: Request, res: Response) => {
       token,
     });
   } catch (error) {
-    res.status(500).json({ message: "Error logging in", error });
+    res.status(500).json({ message: "Error logging in", error: errorMessage(error) });
   }
 };
 
@@ -121,7 +127,7 @@ export const updateProfile = async (req: Request, res: Response) => {
 
     // Validate profilePicture size and type if provided
     if (profilePicture && typeof profilePicture === "string") {
-      const MAX_BYTES = parseInt(process.env.MAX_PROFILE_PIC_SIZE_BYTES || "1048576"); // 1MB default
+      const MAX_BYTES = config.upload.maxProfilePicBytes;
       // basic data URL check
       const isDataUrl = /^data:image\/(png|jpeg|jpg|webp);base64,/.test(profilePicture);
       if (!isDataUrl) {
@@ -211,7 +217,7 @@ export const googleOauth = async (req: Request, res: Response) => {
     const { idToken } = req.body;
     if (!idToken) return res.status(400).json({ message: "Missing idToken" });
 
-    const clientId = process.env.GOOGLE_CLIENT_ID;
+    const clientId = config.google.clientId;
     if (!clientId) return res.status(500).json({ message: "Google client ID not configured" });
 
     const client = new OAuth2Client(clientId);

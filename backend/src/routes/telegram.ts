@@ -5,12 +5,14 @@ import {
   createTelegramPost,
   updateTelegramPost,
   deleteTelegramPost,
+  getTelegramConfig,
 } from "../controllers/telegramController.js";
 import { authenticate, authorizeRole } from "../middleware/auth.js";
 
 const router = Router();
 
 router.get("/", getTelegramPosts);
+router.get("/config", getTelegramConfig);
 router.get("/:id", getTelegramPostById);
 router.post("/", authenticate, authorizeRole("admin", "mentor"), createTelegramPost);
 router.put("/:id", authenticate, authorizeRole("admin", "mentor"), updateTelegramPost);

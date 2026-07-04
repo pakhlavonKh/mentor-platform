@@ -1,10 +1,52 @@
 import { Request, Response } from "express";
+import path from "path";
+import fs from "fs";
 import { AppDataSource } from "../config/database.js";
 import { Submission } from "../entities/Submission.js";
+import { User } from "../entities/User.js";
 import { AuthRequest } from "../middleware/auth.js";
 import { sendMail } from "../utils/mailer.js";
+import { config } from "../config/env.js";
+
+const errorMessage = (error: unknown) => (error instanceof Error ? error.message : "Unexpected error");
 
 const submissionRepository = AppDataSource.getRepository(Submission);
+const userRepository = AppDataSource.getRepository(User);
+
+type SubmissionFile = {
+  filename: string;
+  originalName: string;
+  size: number;
+  mimeType: string;
+  path?: string;
+  url?: string;
+};
+
+function sanitizeFile(file: SubmissionFile) {
+  const { path: _path, ...safe } = file;
+  return {
+    ...safe,
+    url: safe.url || `/api/submissions/files/${safe.filename}`,
+  };
+}
+
+function sanitizeSubmission(submission: Submission) {
+  return {
+    ...submission,
+    files: (submission.files || []).map(sanitizeFile),
+  };
+}
+
+function sanitizeSubmissions(submissions: Submission[]) {
+  return submissions.map(sanitizeSubmission);
+}
+
+async function canAccessSubmission(userId: string, submission: Submission): Promise<boolean> {
+  if (submission.userId === userId) return true;
+  if (submission.reviewerId === userId) return true;
+  const user = await userRepository.findOne({ where: { id: userId } });
+  return user?.role === "admin";
+}
 
 export const createSubmission = async (req: Request, res: Response) => {
   try {
@@ -12,19 +54,19 @@ export const createSubmission = async (req: Request, res: Response) => {
     const userId = authReq.userId;
     if (!userId) return res.status(401).json({ message: "Unauthorized" });
 
-    const files = Array.isArray((req as any).files) ? (req as any).files : [];
+    const files = Array.isArray((req as { files?: Express.Multer.File[] }).files) ? (req as { files?: Express.Multer.File[] }).files! : [];
 
     if (files.length === 0) {
       return res.status(400).json({ message: "No files uploaded" });
     }
 
-    const fileMeta = files.map((f: Express.Multer.File) => ({
+    const fileMeta = files.map((f) => ({
       filename: f.filename,
       originalName: f.originalname,
       size: f.size,
       mimeType: f.mimetype,
       path: f.path,
-      url: `/uploads/${f.filename}`,
+      url: `/api/submissions/files/${f.filename}`,
     }));
 
     const { learningContentId } = req.body;
@@ -38,10 +80,37 @@ export const createSubmission = async (req: Request, res: Response) => {
 
     const saved = await submissionRepository.save(submission);
 
-    res.status(201).json(saved);
+    res.status(201).json(sanitizeSubmission(saved));
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Error creating submission", error });
+    res.status(500).json({ message: "Error creating submission", error: errorMessage(error) });
+  }
+};
+
+export const downloadSubmissionFile = async (req: Request, res: Response) => {
+  try {
+    const authReq = req as AuthRequest;
+    const userId = authReq.userId;
+    if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+    const { filename } = req.params;
+    const submissions = await submissionRepository.find();
+    const submission = submissions.find((s) =>
+      (s.files || []).some((f) => f.filename === filename),
+    );
+
+    if (!submission) return res.status(404).json({ message: "File not found" });
+
+    const allowed = await canAccessSubmission(userId, submission);
+    if (!allowed) return res.status(403).json({ message: "Forbidden" });
+
+    const filePath = path.join(process.cwd(), config.upload.dir, filename);
+    if (!fs.existsSync(filePath)) return res.status(404).json({ message: "File not found" });
+
+    res.sendFile(filePath);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error downloading file", error: errorMessage(error) });
   }
 };
 
@@ -61,10 +130,10 @@ export const getUserSubmissions = async (req: Request, res: Response) => {
       take: Number(limit),
     });
 
-    res.json({ data: submissions, pagination: { page: Number(page), limit: Number(limit), total, pages: Math.ceil(total / Number(limit)) } });
+    res.json({ data: sanitizeSubmissions(submissions), pagination: { page: Number(page), limit: Number(limit), total, pages: Math.ceil(total / Number(limit)) } });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Error fetching submissions", error });
+    res.status(500).json({ message: "Error fetching submissions", error: errorMessage(error) });
   }
 };
 
@@ -77,15 +146,14 @@ export const getSubmissionById = async (req: Request, res: Response) => {
     const submission = await submissionRepository.findOne({ where: { id } });
     if (!submission) return res.status(404).json({ message: "Submission not found" });
 
-    // allow owner or admin/mentor (authorization middleware will handle admin/mentor checks for protected routes)
-    if (submission.userId !== userId) {
+    if (!(await canAccessSubmission(userId!, submission))) {
       return res.status(403).json({ message: "Forbidden" });
     }
 
-    res.json(submission);
+    res.json(sanitizeSubmission(submission));
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Error fetching submission", error });
+    res.status(500).json({ message: "Error fetching submission", error: errorMessage(error) });
   }
 };
 
@@ -94,7 +162,6 @@ export const listAllSubmissions = async (req: Request, res: Response) => {
     const { page = 1, limit = 50 } = req.query;
     const skip = (Number(page) - 1) * Number(limit);
 
-    // Normalize reviewerId (handle arrays or unexpected values)
     let reviewerId: string | undefined;
     const rawReviewer = req.query.reviewerId;
     if (Array.isArray(rawReviewer)) reviewerId = rawReviewer[0];
@@ -110,10 +177,10 @@ export const listAllSubmissions = async (req: Request, res: Response) => {
 
     const [submissions, total] = await qb.skip(skip).take(Number(limit)).getManyAndCount();
 
-    res.json({ data: submissions, pagination: { page: Number(page), limit: Number(limit), total, pages: Math.ceil(total / Number(limit)) } });
+    res.json({ data: sanitizeSubmissions(submissions), pagination: { page: Number(page), limit: Number(limit), total, pages: Math.ceil(total / Number(limit)) } });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Error fetching submissions", error });
+    res.status(500).json({ message: "Error fetching submissions", error: errorMessage(error) });
   }
 };
 
@@ -127,7 +194,6 @@ export const updateSubmissionStatus = async (req: Request, res: Response) => {
 
     await submissionRepository.update(id, { status } as Partial<Submission>);
     const updated = await submissionRepository.findOne({ where: { id } });
-    // notify user
     try {
       if (updated?.user?.email) {
         await sendMail(updated.user.email, `Submission status updated: ${status}`, `Your submission status is now ${status}.`);
@@ -135,10 +201,10 @@ export const updateSubmissionStatus = async (req: Request, res: Response) => {
     } catch (err) {
       console.error("Failed to send notification email", err);
     }
-    res.json(updated);
+    res.json(updated ? sanitizeSubmission(updated) : null);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Error updating status", error });
+    res.status(500).json({ message: "Error updating status", error: errorMessage(error) });
   }
 };
 
@@ -156,10 +222,10 @@ export const addFeedback = async (req: Request, res: Response) => {
     } catch (err) {
       console.error("Failed to send feedback email", err);
     }
-    res.json(updated);
+    res.json(updated ? sanitizeSubmission(updated) : null);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Error adding feedback", error });
+    res.status(500).json({ message: "Error adding feedback", error: errorMessage(error) });
   }
 };
 
@@ -172,10 +238,10 @@ export const assignReviewer = async (req: Request, res: Response) => {
 
     await submissionRepository.update(id, { reviewerId, status: "in_review" } as Partial<Submission>);
     const updated = await submissionRepository.findOne({ where: { id } });
-    res.json(updated);
+    res.json(updated ? sanitizeSubmission(updated) : null);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Error assigning reviewer", error });
+    res.status(500).json({ message: "Error assigning reviewer", error: errorMessage(error) });
   }
 };
 
@@ -192,10 +258,10 @@ export const claimSubmission = async (req: Request, res: Response) => {
 
     await submissionRepository.update(id, { reviewerId: userId, status: "in_review" } as Partial<Submission>);
     const updated = await submissionRepository.findOne({ where: { id } });
-    res.json(updated);
+    res.json(updated ? sanitizeSubmission(updated) : null);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Error claiming submission", error });
+    res.status(500).json({ message: "Error claiming submission", error: errorMessage(error) });
   }
 };
 
@@ -212,10 +278,10 @@ export const unclaimSubmission = async (req: Request, res: Response) => {
 
     await submissionRepository.update(id, { reviewerId: null, status: "pending" } as Partial<Submission>);
     const updated = await submissionRepository.findOne({ where: { id } });
-    res.json(updated);
+    res.json(updated ? sanitizeSubmission(updated) : null);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Error unclaiming submission", error });
+    res.status(500).json({ message: "Error unclaiming submission", error: errorMessage(error) });
   }
 };
 
@@ -235,9 +301,9 @@ export const getReviewerSubmissions = async (req: Request, res: Response) => {
       take: Number(limit),
     });
 
-    res.json({ data: submissions, pagination: { page: Number(page), limit: Number(limit), total, pages: Math.ceil(total / Number(limit)) } });
+    res.json({ data: sanitizeSubmissions(submissions), pagination: { page: Number(page), limit: Number(limit), total, pages: Math.ceil(total / Number(limit)) } });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Error fetching reviewer submissions", error });
+    res.status(500).json({ message: "Error fetching reviewer submissions", error: errorMessage(error) });
   }
 };

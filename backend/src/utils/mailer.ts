@@ -1,19 +1,14 @@
 import nodemailer from "nodemailer";
-
-const SMTP_HOST = process.env.SMTP_HOST;
-const SMTP_PORT = process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT) : undefined;
-const SMTP_USER = process.env.SMTP_USER;
-const SMTP_PASS = process.env.SMTP_PASS;
-const FROM_EMAIL = process.env.FROM_EMAIL || (SMTP_USER || "no-reply@example.com");
+import { config } from "../config/env.js";
 
 let transporter: nodemailer.Transporter | null = null;
 
-if (SMTP_HOST && SMTP_PORT && SMTP_USER && SMTP_PASS) {
+if (config.smtp.host && config.smtp.user && config.smtp.pass) {
   transporter = nodemailer.createTransport({
-    host: SMTP_HOST,
-    port: SMTP_PORT,
-    secure: SMTP_PORT === 465,
-    auth: { user: SMTP_USER, pass: SMTP_PASS },
+    host: config.smtp.host,
+    port: config.smtp.port,
+    secure: config.smtp.port === 465,
+    auth: { user: config.smtp.user, pass: config.smtp.pass },
   });
 }
 
@@ -22,5 +17,5 @@ export async function sendMail(to: string, subject: string, text: string, html?:
     console.log("Mailer not configured, skipping email to", to, subject);
     return;
   }
-  await transporter.sendMail({ from: FROM_EMAIL, to, subject, text, html });
+  await transporter.sendMail({ from: config.smtp.fromEmail, to, subject, text, html });
 }

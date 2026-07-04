@@ -2,6 +2,8 @@ import { Request, Response } from "express";
 import { AppDataSource } from "../config/database.js";
 import { PricingPlan } from "../entities/PricingPlan.js";
 
+const errorMessage = (error: unknown) => (error instanceof Error ? error.message : "Unexpected error");
+
 const pricingRepository = AppDataSource.getRepository(PricingPlan);
 
 export const getPricingPlans = async (req: Request, res: Response) => {
@@ -14,7 +16,7 @@ export const getPricingPlans = async (req: Request, res: Response) => {
 
     res.json(plans);
   } catch (error) {
-    res.status(500).json({ message: "Error fetching pricing plans", error });
+    res.status(500).json({ message: "Error fetching pricing plans", error: errorMessage(error) });
   }
 };
 
@@ -29,7 +31,7 @@ export const getPricingPlanById = async (req: Request, res: Response) => {
 
     res.json(plan);
   } catch (error) {
-    res.status(500).json({ message: "Error fetching pricing plan", error });
+    res.status(500).json({ message: "Error fetching pricing plan", error: errorMessage(error) });
   }
 };
 
@@ -48,7 +50,7 @@ export const createPricingPlan = async (req: Request, res: Response) => {
     const result = await pricingRepository.save(plan);
     res.status(201).json(result);
   } catch (error) {
-    res.status(400).json({ message: "Error creating pricing plan", error });
+    res.status(400).json({ message: "Error creating pricing plan", error: errorMessage(error) });
   }
 };
 
@@ -62,7 +64,7 @@ export const updatePricingPlan = async (req: Request, res: Response) => {
 
     res.json(plan);
   } catch (error) {
-    res.status(400).json({ message: "Error updating pricing plan", error });
+    res.status(400).json({ message: "Error updating pricing plan", error: errorMessage(error) });
   }
 };
 
@@ -73,6 +75,6 @@ export const deletePricingPlan = async (req: Request, res: Response) => {
     await pricingRepository.delete(id);
     res.json({ message: "Pricing plan deleted successfully" });
   } catch (error) {
-    res.status(500).json({ message: "Error deleting pricing plan", error });
+    res.status(500).json({ message: "Error deleting pricing plan", error: errorMessage(error) });
   }
 };

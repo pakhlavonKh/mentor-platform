@@ -1,5 +1,11 @@
 import { Entity, PrimaryGeneratedColumn, Column } from "typeorm";
 
+export interface LearningFile {
+  url: string;
+  mimeType: string;
+  name: string;
+}
+
 @Entity("learning_content")
 export class LearningContent {
   @PrimaryGeneratedColumn("uuid")
@@ -22,6 +28,18 @@ export class LearningContent {
 
   @Column({ type: "varchar" })
   duration!: string;
+
+  @Column({ type: "varchar", nullable: true })
+  fileUrl!: string; // Primary file URL/path (for backward compatibility)
+
+  @Column({ type: "varchar", nullable: true })
+  thumbnailUrl!: string; // Preview image for videos
+
+  @Column({ type: "varchar" })
+  mimeType!: string; // e.g., "video/mp4", "application/pdf", "image/jpeg"
+
+  @Column("jsonb", { nullable: true })
+  files?: LearningFile[]; // Array of additional supporting files
 
   @Column({ type: "boolean", default: false })
   completed!: boolean;

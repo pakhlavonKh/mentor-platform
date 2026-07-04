@@ -6,6 +6,7 @@ import { Grant } from "../entities/Grant.js";
 import { LearningContent } from "../entities/LearningContent.js";
 import { TelegramPost } from "../entities/TelegramPost.js";
 import { PricingPlan } from "../entities/PricingPlan.js";
+import { CalendarEvent } from "../entities/CalendarEvent.js";
 import { User } from "../entities/User.js";
 
 const seedDatabase = async () => {
@@ -25,6 +26,7 @@ const seedDatabase = async () => {
     const telegramRepository = AppDataSource.getRepository(TelegramPost);
     const pricingRepository = AppDataSource.getRepository(PricingPlan);
     const userRepository = AppDataSource.getRepository(User);
+    const calendarRepository = AppDataSource.getRepository(CalendarEvent);
 
     // Seed users (admin, mentor, student)
     const hashedPassword = await bcrypt.hash("admin123", 10);
@@ -141,6 +143,84 @@ const seedDatabase = async () => {
         },
         link: "#",
       },
+      {
+        title: { en: "Harvard Summer School", ru: "Летняя школа Гарварда", kz: "Гарvard жазғы мектебі" },
+        country: "United States",
+        type: "summer_program" as const,
+        funding: "partial" as const,
+        deadline: "2026-04-01",
+        description: {
+          en: "Seven-week session offering college-level courses at Harvard University for high school and college students.",
+          ru: "Семинедельная программа с университетскими курсами Гарварда для школьников и студентов.",
+          kz: "Гарvard университетінде орналасқан жеті апталық колледж деңгейіндегі курстар.",
+        },
+        link: "#",
+      },
+      {
+        title: { en: "Oxford Summer Courses", ru: "Летние курсы Оксфорда", kz: "Oxford жазғы курстары" },
+        country: "United Kingdom",
+        type: "summer_program" as const,
+        funding: "partial" as const,
+        deadline: "2026-03-15",
+        description: {
+          en: "Two-week academic programs in Oxford covering humanities, sciences, and leadership.",
+          ru: "Двухнедельные академические программы в Оксфорде по гуманитарным и естественным наукам.",
+          kz: "Oxford қаласында гуманитарлық және табиғи пәндер бойынша екі апталық бағдарламалар.",
+        },
+        link: "#",
+      },
+      {
+        title: { en: "Bogazici University Summer Program", ru: "Летняя программа университета Богазичи", kz: "Boğaziçi университетінің жазғы бағдарламасы" },
+        country: "Turkey",
+        type: "summer_program" as const,
+        funding: "full" as const,
+        deadline: "2026-05-01",
+        description: {
+          en: "Fully funded summer exchange at one of Turkey's top universities with Turkish language and culture modules.",
+          ru: "Полностью финансируемая летняя программа в ведущем университете Турции с курсами турецкого языка.",
+          kz: "Түркияның үздік университетінде толық қаржыландырылатын жазғы алмасу бағдарламасы.",
+        },
+        link: "#",
+      },
+      {
+        title: { en: "UK International Foundation Year", ru: "Международный Foundation Year (UK)", kz: "UK халықаралық Foundation Year" },
+        country: "United Kingdom",
+        type: "foundation" as const,
+        funding: "partial" as const,
+        deadline: "2026-06-30",
+        description: {
+          en: "One-year pre-university program preparing international students for UK bachelor's degrees.",
+          ru: "Годовая подготовительная программа для иностранных студентов перед бакалавриатом в Великобритании.",
+          kz: "Ұлыбританияда бакалавриатқа дайындық үшін бір жылдық бағдарлама.",
+        },
+        link: "#",
+      },
+      {
+        title: { en: " INTO Manchester Foundation", ru: "INTO Manchester Foundation", kz: "INTO Manchester Foundation" },
+        country: "United Kingdom",
+        type: "foundation" as const,
+        funding: "partial" as const,
+        deadline: "2026-07-15",
+        description: {
+          en: "Pathway program with guaranteed progression to the University of Manchester upon successful completion.",
+          ru: "Pathway-программа с гарантированным зачислением в University of Manchester.",
+          kz: "Сәтті аяқталғаннан кейін University of Manchester-ге кіруді кепілдейтін pathway бағдарламасы.",
+        },
+        link: "#",
+      },
+      {
+        title: { en: "Kaplan Istanbul Foundation", ru: "Kaplan Istanbul Foundation", kz: "Kaplan Istanbul Foundation" },
+        country: "Turkey",
+        type: "foundation" as const,
+        funding: "full" as const,
+        deadline: "2026-08-01",
+        description: {
+          en: "Foundation program in Istanbul preparing students for Turkish and European partner universities.",
+          ru: "Foundation-программа в Стамбуле для поступления в турецкие и европейские университеты.",
+          kz: "Стамбулдағы Foundation бағдарламасы — Түркия мен Еуропа университеттеріне дайындық.",
+        },
+        link: "#",
+      },
     ];
 
     await grantRepository.save(grants);
@@ -158,6 +238,9 @@ const seedDatabase = async () => {
           kz: "Стипендияларға арналған мотивациялық хаттарды жазудың қадамдық нұсқаулығы.",
         },
         duration: "15 min",
+        fileUrl: "/uploads/learning/motivation-letter-video.mp4",
+        mimeType: "video/mp4",
+        thumbnailUrl: "/uploads/learning/motivation-letter-thumb.jpg",
       },
       {
         title: { en: "CV Writing for Scholarship Applications", ru: "Составление резюме для стипендий", kz: "Стипендияға арналған CV жазу" },
@@ -169,6 +252,9 @@ const seedDatabase = async () => {
           kz: "Стипендиялық өтініштерде ерекшеленетін CV қалай құрылымдау керектігін үйреніңіз.",
         },
         duration: "10 min",
+        fileUrl: "/uploads/learning/cv-writing-guide.pdf",
+        mimeType: "application/pdf",
+        thumbnailUrl: "/uploads/learning/cv-guide-cover.jpg",
       },
       {
         title: { en: "Getting Strong Recommendation Letters", ru: "Получение рекомендательных писем", kz: "Ұсыныс хаттарын алу" },
@@ -180,6 +266,9 @@ const seedDatabase = async () => {
           kz: "Ұсынушыларды таңдау және олардың тиімді хаттар жазуына көмектесу кеңестері.",
         },
         duration: "8 min",
+        fileUrl: "/uploads/learning/recommendation-letters.pdf",
+        mimeType: "application/pdf",
+        thumbnailUrl: "/uploads/learning/rec-letters-thumb.jpg",
       },
       {
         title: { en: "Motivation Letter Checklist", ru: "Чек-лист мотивационного письма", kz: "Мотивациялық хат тексеру парағы" },
@@ -191,6 +280,9 @@ const seedDatabase = async () => {
           kz: "Мотивациялық хатты жібермес бұрын тексеретін маңызды тізім.",
         },
         duration: "5 min",
+        fileUrl: "/uploads/learning/motivation-checklist.pdf",
+        mimeType: "application/pdf",
+        thumbnailUrl: "/uploads/learning/checklist-thumb.jpg",
       },
       {
         title: { en: "Interview Preparation Guide", ru: "Руководство по подготовке к интервью", kz: "Сұхбатқа дайындық нұсқаулығы" },
@@ -202,6 +294,9 @@ const seedDatabase = async () => {
           kz: "Стипендия сұхбатының жиі қойылатын сұрақтары және оларға сенімді жауап беру.",
         },
         duration: "20 min",
+        fileUrl: "/uploads/learning/interview-prep.mp4",
+        mimeType: "video/mp4",
+        thumbnailUrl: "/uploads/learning/interview-thumb.jpg",
       },
       {
         title: { en: "Research Proposal Writing", ru: "Написание исследовательского предложения", kz: "Зерттеу ұсынысын жазу" },
@@ -213,6 +308,45 @@ const seedDatabase = async () => {
           kz: "Магистратура стипендияларына арналған зерттеу ұсынысын қалай жазу керек.",
         },
         duration: "12 min",
+        fileUrl: "/uploads/learning/research-proposal-guide.pdf",
+        mimeType: "application/pdf",
+        thumbnailUrl: "/uploads/learning/research-guide-thumb.jpg",
+      },
+      {
+        title: { en: "How to Apply for Türkiye Bursları", ru: "Как подать заявку на Türkiye Bursları", kz: "Türkiye Bursları ұсынысына қалай өтінім беру керек" },
+        type: "video" as const,
+        topic: { en: "Türkiye Bursları", ru: "Türkiye Bursları", kz: "Türkiye Bursları" },
+        description: {
+          en: "Complete guide to applying for Turkish government scholarships with essay and recommendation letter guidance.",
+          ru: "Полное руководство по подаче заявки на турецкие государственные стипендии с рекомендациями по написанию эссе и писем рекомендации.",
+          kz: "Түркия үкіметінің стипендияларына өтінім беруге арналған толық нұсқаулық, эссе және ұсыныс хаттарын жазу бойынша ұсынымдарымен.",
+        },
+        duration: "25 min",
+        fileUrl: "/uploads/learning/tbLearning/IMG_6885.mp4",
+        mimeType: "video/mp4",
+        thumbnailUrl: "/uploads/learning/tbLearning/photo_2026-05-19_18-51-54.jpg",
+        files: [
+          {
+            url: "/uploads/learning/tbLearning/_essay exercises.pdf",
+            mimeType: "application/pdf",
+            name: "Essay Exercises & Tips",
+          },
+          {
+            url: "/uploads/learning/tbLearning/Recommendation Letter GUIDE .pdf",
+            mimeType: "application/pdf",
+            name: "Recommendation Letter Guide",
+          },
+          {
+            url: "/uploads/learning/tbLearning/photo_2026-05-19_18-51-51.jpg",
+            mimeType: "image/jpeg",
+            name: "Reference Example 1",
+          },
+          {
+            url: "/uploads/learning/tbLearning/photo_2026-05-19_18-51-48.jpg",
+            mimeType: "image/jpeg",
+            name: "Reference Example 2",
+          },
+        ],
       },
     ];
 
@@ -228,8 +362,8 @@ const seedDatabase = async () => {
           ru: "Приём заявок на совместные магистерские программы Erasmus+ 2026–2027 открыт. Более 100 программ по всей Европе.",
           kz: "Erasmus+ 2026–2027 бірлескен магистратура бағдарламаларына өтінімдер қабылдау басталды. Еуропа бойынша 100-ден астам бағдарлама.",
         },
-        source: "ScholarshipHub",
-        link: "#",
+        source: "@studyqadam_corporate",
+        link: "https://t.me/studyqadam_corporate",
         date: "2026-03-28",
       },
       {
@@ -239,8 +373,8 @@ const seedDatabase = async () => {
           ru: "DAAD продлил срок подачи заявок по нескольким программам до 30 ноября.",
           kz: "DAAD бірнеше бағдарлама бойынша өтінім мерзімін 30 қарашаға дейін ұзартты.",
         },
-        source: "GrantAlerts",
-        link: "#",
+        source: "@studyqadam_corporate",
+        link: "https://t.me/studyqadam_corporate",
         date: "2026-03-26",
       },
       {
@@ -250,8 +384,8 @@ const seedDatabase = async () => {
           ru: "Присоединяйтесь к бесплатному вебинару в субботу и узнайте секреты подачи на Chevening.",
           kz: "Сенбіде біздің тегін вебинарға қосылыңыз және Chevening-ке өтінім берудің құпияларын біліңіз.",
         },
-        source: "EduConnect",
-        link: "#",
+        source: "@studyqadam_corporate",
+        link: "https://t.me/studyqadam_corporate",
         date: "2026-03-25",
       },
       {
@@ -261,14 +395,41 @@ const seedDatabase = async () => {
           ru: "Stipendium Hungaricum принимает заявки на бакалавриат, магистратуру и докторантуру.",
           kz: "Stipendium Hungaricum бакалавриат, магистратура және докторантура бағдарламаларына өтінімдерді қабылдайды.",
         },
-        source: "ScholarshipHub",
-        link: "#",
+        source: "@studyqadam_corporate",
+        link: "https://t.me/studyqadam_corporate",
         date: "2026-03-23",
       },
     ];
 
     await telegramRepository.save(telegramPosts);
     console.log("✓ Telegram posts seeded with", telegramPosts.length, "records");
+
+    const calendarEvents = [
+      {
+        title: { en: "Chevening Application Workshop", ru: "Воркшоп по заявке Chevening", kz: "Chevening өтінім вorkshop" },
+        description: { en: "Live Q&A session for Chevening applicants.", ru: "Живая сессия вопросов и ответов.", kz: "Chevening өтінімшілерге арналған сессия." },
+        date: "2026-07-10",
+        category: "event" as const,
+        link: "https://t.me/studyqadam_corporate",
+      },
+      {
+        title: { en: "Summer Program Deadline Reminder", ru: "Напоминание о дедлайне летних программ", kz: "Жазғы бағдарлама мерзімі" },
+        description: { en: "Most summer programs close applications in April–May.", ru: "Большинство летних программ закрывают приём в апреле–мае.", kz: "Көптеген жазғы бағдарламалар сәуір–мамырда өтінімдерді жабады." },
+        date: "2026-04-15",
+        category: "platform" as const,
+        link: "/summer-programs",
+      },
+      {
+        title: { en: "Foundation Intake Period", ru: "Период набора на Foundation", kz: "Foundation қабылдау мерзімі" },
+        description: { en: "Apply for September foundation intakes.", ru: "Подавайте заявки на сентябрьский набор Foundation.", kz: "Қыркүйек Foundation қабылдауына өтінім беріңіз." },
+        date: "2026-08-01",
+        category: "application" as const,
+        link: "/foundations",
+      },
+    ];
+
+    await calendarRepository.save(calendarEvents);
+    console.log("✓ Calendar events seeded with", calendarEvents.length, "records");
 
     // Seed pricing plans
     const pricingPlans = [

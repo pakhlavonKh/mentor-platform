@@ -35,6 +35,7 @@ export default function GrantsPage() {
 
   const filtered = useMemo(() => {
     return grants.filter((g) => {
+      if (g.type === "summer_program" || g.type === "foundation") return false;
       if (search && !lt(g.title).toLowerCase().includes(search.toLowerCase())) return false;
       if (country !== "all" && g.country !== country) return false;
       if (type !== "all" && g.type !== type) return false;

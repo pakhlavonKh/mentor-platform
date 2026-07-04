@@ -4,6 +4,8 @@ import { Order } from "../entities/Order.js";
 import { AuthRequest } from "../middleware/auth.js";
 import { sendMail } from "../utils/mailer.js";
 
+const errorMessage = (error: unknown) => (error instanceof Error ? error.message : "Unexpected error");
+
 const orderRepository = AppDataSource.getRepository(Order);
 
 export const createOrder = async (req: Request, res: Response) => {
@@ -28,7 +30,7 @@ export const createOrder = async (req: Request, res: Response) => {
     res.status(201).json(saved);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Error creating order", error });
+    res.status(500).json({ message: "Error creating order", error: errorMessage(error) });
   }
 };
 
@@ -45,19 +47,28 @@ export const getUserOrders = async (req: Request, res: Response) => {
     res.json({ data: orders, pagination: { page: Number(page), limit: Number(limit), total, pages: Math.ceil(total / Number(limit)) } });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Error fetching orders", error });
+    res.status(500).json({ message: "Error fetching orders", error: errorMessage(error) });
   }
 };
 
 export const getOrderById = async (req: Request, res: Response) => {
   try {
+    const authReq = req as AuthRequest;
+    const userId = authReq.userId;
+    if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
     const { id } = req.params;
     const order = await orderRepository.findOne({ where: { id } });
     if (!order) return res.status(404).json({ message: "Order not found" });
+
+    if (order.userId !== userId) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+
     res.json(order);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Error fetching order", error });
+    res.status(500).json({ message: "Error fetching order", error: errorMessage(error) });
   }
 };
 
@@ -71,7 +82,7 @@ export const listAllOrders = async (req: Request, res: Response) => {
     res.json({ data: orders, pagination: { page: Number(page), limit: Number(limit), total, pages: Math.ceil(total / Number(limit)) } });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Error fetching orders", error });
+    res.status(500).json({ message: "Error fetching orders", error: errorMessage(error) });
   }
 };
 
@@ -96,6 +107,6 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
     res.json(updated);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Error updating order status", error });
+    res.status(500).json({ message: "Error updating order status", error: errorMessage(error) });
   }
 };

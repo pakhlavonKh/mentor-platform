@@ -1,6 +1,9 @@
 import { Request, Response } from "express";
 import { AppDataSource } from "../config/database.js";
 import { TelegramPost } from "../entities/TelegramPost.js";
+import { config } from "../config/env.js";
+
+const errorMessage = (error: unknown) => (error instanceof Error ? error.message : "Unexpected error");
 
 const telegramRepository = AppDataSource.getRepository(TelegramPost);
 
@@ -29,7 +32,7 @@ export const getTelegramPosts = async (req: Request, res: Response) => {
       },
     });
   } catch (error) {
-    res.status(500).json({ message: "Error fetching telegram posts", error });
+    res.status(500).json({ message: "Error fetching telegram posts", error: errorMessage(error) });
   }
 };
 
@@ -44,7 +47,7 @@ export const getTelegramPostById = async (req: Request, res: Response) => {
 
     res.json(post);
   } catch (error) {
-    res.status(500).json({ message: "Error fetching telegram post", error });
+    res.status(500).json({ message: "Error fetching telegram post", error: errorMessage(error) });
   }
 };
 
@@ -55,15 +58,15 @@ export const createTelegramPost = async (req: Request, res: Response) => {
     const post = telegramRepository.create({
       title,
       description,
-      source,
-      link,
-      date,
+      source: source || config.telegram.channelUsername,
+      link: link || config.telegram.channelUrl,
+      date: date || new Date().toISOString().slice(0, 10),
     });
 
     const result = await telegramRepository.save(post);
     res.status(201).json(result);
   } catch (error) {
-    res.status(400).json({ message: "Error creating telegram post", error });
+    res.status(400).json({ message: "Error creating telegram post", error: errorMessage(error) });
   }
 };
 
@@ -77,7 +80,7 @@ export const updateTelegramPost = async (req: Request, res: Response) => {
 
     res.json(post);
   } catch (error) {
-    res.status(400).json({ message: "Error updating telegram post", error });
+    res.status(400).json({ message: "Error updating telegram post", error: errorMessage(error) });
   }
 };
 
@@ -88,6 +91,18 @@ export const deleteTelegramPost = async (req: Request, res: Response) => {
     await telegramRepository.delete(id);
     res.json({ message: "Telegram post deleted successfully" });
   } catch (error) {
-    res.status(500).json({ message: "Error deleting telegram post", error });
+    res.status(500).json({ message: "Error deleting telegram post", error: errorMessage(error) });
+  }
+};
+
+export const getTelegramConfig = async (req: Request, res: Response) => {
+  try {
+    res.json({
+      telegramPhone: config.telegram.phone,
+      telegramChannelUrl: config.telegram.channelUrl,
+      telegramChannelUsername: config.telegram.channelUsername,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching telegram config", error: errorMessage(error) });
   }
 };

@@ -12,9 +12,10 @@ import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { User, Mail, BookOpen, Bookmark, FileCheck, CreditCard, Clock, CheckCircle2, LogOut, ArrowRight, Camera } from "lucide-react";
-import { api, type LearningContent, type Grant, type Submission, type Order } from "@/lib/api";
+import { api, type LearningContent, type Grant, type Submission, type Order, downloadAuthenticatedFile } from "@/lib/api";
 import { useLocale } from "@/hooks/use-locale";
 import { GrantCard } from "@/components/GrantCard";
+import { ProfileCalendar } from "@/components/ProfileCalendar";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import useSavedGrants from "@/hooks/use-saved-grants";
@@ -213,6 +214,11 @@ export default function ProfilePage() {
           </div>
         </motion.div>
 
+        {/* Calendar */}
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }}>
+          <ProfileCalendar />
+        </motion.div>
+
         {/* Learning Progress */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
           <Card className="shadow-soft border border-border/60">
@@ -315,7 +321,21 @@ export default function ProfilePage() {
                           <div className="text-sm text-muted-foreground">Status: {s.status}</div>
                         </div>
                         <div>
-                          <a href={s.files[0]?.url || s.files[0]?.path} target="_blank" rel="noreferrer" className="text-primary underline">Download</a>
+                          <Button
+                            variant="link"
+                            className="text-primary underline p-0 h-auto"
+                            onClick={async () => {
+                              const file = s.files[0];
+                              if (!file?.url) return;
+                              try {
+                                await downloadAuthenticatedFile(file.url, file.originalName || "document");
+                              } catch {
+                                toast.error("Download failed");
+                              }
+                            }}
+                          >
+                            Download
+                          </Button>
                         </div>
                       </div>
                       {s.feedback && <div className="mt-2 text-sm bg-muted p-2 rounded">Feedback: {s.feedback}</div>}

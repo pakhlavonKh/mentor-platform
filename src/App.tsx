@@ -17,12 +17,20 @@ import ProfilePage from "./pages/ProfilePage";
 import LoginPage from "./pages/LoginPage";
 import SignUpPage from "./pages/SignUpPage";
 import AdminDashboard from "./pages/AdminDashboard";
+import AdminPricing from "./pages/AdminPricing";
+import AdminTelegram from "./pages/AdminTelegram";
+import AdminLearning from "./pages/AdminLearning";
+import AdminOrders from "./pages/AdminOrders";
 import MentorDashboard from "./pages/MentorDashboard";
 import AdminUsers from "./pages/AdminUsers";
+import AdminMentors from "./pages/AdminMentors";
 import AdminSubmissions from "./pages/AdminSubmissions";
 import TutorsPage from "./pages/TutorsPage";
 import CheckoutPage from "./pages/CheckoutPage";
 import NotFound from "./pages/NotFound";
+import SummerProgramsPage from "./pages/SummerProgramsPage";
+import FoundationsPage from "./pages/FoundationsPage";
+import AdminCalendar from "./pages/AdminCalendar";
 
 const queryClient = new QueryClient();
 
@@ -43,6 +51,8 @@ function AppContent() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/grants" element={<GrantsPage />} />
+          <Route path="/summer-programs" element={<SummerProgramsPage />} />
+          <Route path="/foundations" element={<FoundationsPage />} />
           <Route path="/telegram" element={<TelegramPage />} />
           <Route path="/learn" element={isLoggedIn ? <LearnPage /> : <Navigate to="/login" replace />} />
           <Route path="/learn/:id" element={isLoggedIn ? <LearningDetail /> : <Navigate to="/login" replace />} />
@@ -58,8 +68,14 @@ function AppContent() {
           <Route path="/pricing" element={<PricingPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/profile" element={<ProfilePage />} />
-          <Route path="/admin/users" element={<AdminUsers />} />
-          <Route path="/admin/submissions" element={<AdminSubmissions />} />
+          <Route path="/admin/users" element={isLoggedIn && user?.role === "admin" ? <AdminUsers /> : <Navigate to="/login" replace />} />
+          <Route path="/admin/mentors" element={isLoggedIn && user?.role === "admin" ? <AdminMentors /> : <Navigate to="/login" replace />} />
+          <Route path="/admin/submissions" element={isLoggedIn && user?.role === "admin" ? <AdminSubmissions /> : <Navigate to="/login" replace />} />
+          <Route path="/admin/pricing" element={isLoggedIn && user?.role === "admin" ? <AdminPricing /> : <Navigate to="/login" replace />} />
+          <Route path="/admin/telegram" element={isLoggedIn && user?.role === "admin" ? <AdminTelegram /> : <Navigate to="/login" replace />} />
+          <Route path="/admin/learning" element={isLoggedIn && user?.role === "admin" ? <AdminLearning /> : <Navigate to="/login" replace />} />
+          <Route path="/admin/calendar" element={isLoggedIn && user?.role === "admin" ? <AdminCalendar /> : <Navigate to="/login" replace />} />
+          <Route path="/admin/orders" element={isLoggedIn && user?.role === "admin" ? <AdminOrders /> : <Navigate to="/login" replace />} />
           <Route path="/admin/tutors" element={<TutorsPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignUpPage />} />

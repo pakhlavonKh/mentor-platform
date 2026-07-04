@@ -2,6 +2,8 @@ import { Request, Response } from "express";
 import { AppDataSource } from "../config/database.js";
 import { Grant } from "../entities/Grant.js";
 
+const errorMessage = (error: unknown) => (error instanceof Error ? error.message : "Unexpected error");
+
 const grantRepository = AppDataSource.getRepository(Grant);
 
 export const getGrants = async (req: Request, res: Response) => {
@@ -10,13 +12,13 @@ export const getGrants = async (req: Request, res: Response) => {
     let query = grantRepository.createQueryBuilder("grant");
 
     if (type) {
-      query = query.where("grant.type = :type", { type });
+      query = query.andWhere("grant.type = :type", { type });
     }
     if (funding) {
-      query = query.where("grant.funding = :funding", { funding });
+      query = query.andWhere("grant.funding = :funding", { funding });
     }
     if (country) {
-      query = query.where("grant.country ILIKE :country", { country: `%${country}%` });
+      query = query.andWhere("grant.country ILIKE :country", { country: `%${country}%` });
     }
 
     const skip = (Number(page) - 1) * Number(limit);
@@ -35,7 +37,7 @@ export const getGrants = async (req: Request, res: Response) => {
       },
     });
   } catch (error) {
-    res.status(500).json({ message: "Error fetching grants", error });
+    res.status(500).json({ message: "Error fetching grants", error: errorMessage(error) });
   }
 };
 
@@ -50,7 +52,7 @@ export const getGrantById = async (req: Request, res: Response) => {
 
     res.json(grant);
   } catch (error) {
-    res.status(500).json({ message: "Error fetching grant", error });
+    res.status(500).json({ message: "Error fetching grant", error: errorMessage(error) });
   }
 };
 
@@ -71,7 +73,7 @@ export const createGrant = async (req: Request, res: Response) => {
     const result = await grantRepository.save(grant);
     res.status(201).json(result);
   } catch (error) {
-    res.status(400).json({ message: "Error creating grant", error });
+    res.status(400).json({ message: "Error creating grant", error: errorMessage(error) });
   }
 };
 
@@ -85,7 +87,7 @@ export const updateGrant = async (req: Request, res: Response) => {
 
     res.json(grant);
   } catch (error) {
-    res.status(400).json({ message: "Error updating grant", error });
+    res.status(400).json({ message: "Error updating grant", error: errorMessage(error) });
   }
 };
 
@@ -96,6 +98,6 @@ export const deleteGrant = async (req: Request, res: Response) => {
     await grantRepository.delete(id);
     res.json({ message: "Grant deleted successfully" });
   } catch (error) {
-    res.status(500).json({ message: "Error deleting grant", error });
+    res.status(500).json({ message: "Error deleting grant", error: errorMessage(error) });
   }
 };

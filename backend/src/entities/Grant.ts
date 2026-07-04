@@ -13,9 +13,9 @@ export class Grant {
 
   @Column({
     type: "enum",
-    enum: ["bachelor", "master", "internship", "phd"],
+    enum: ["bachelor", "master", "internship", "phd", "summer_program", "foundation"],
   })
-  type!: "bachelor" | "master" | "internship" | "phd";
+  type!: "bachelor" | "master" | "internship" | "phd" | "summer_program" | "foundation";
 
   @Column({
     type: "enum",

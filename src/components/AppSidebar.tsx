@@ -1,4 +1,4 @@
-import { LayoutDashboard, GraduationCap, Send, BookOpen, CreditCard, User, GlobeLock } from "lucide-react";
+import { LayoutDashboard, GraduationCap, Send, BookOpen, CreditCard, User, GlobeLock, FileText, ShoppingCart, Sun, Building2, CalendarDays } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -20,6 +20,8 @@ import {
 const mainItems = [
   { key: "common.home", url: "/", icon: LayoutDashboard },
   { key: "common.grants", url: "/grants", icon: GraduationCap },
+  { key: "common.summerPrograms", url: "/summer-programs", icon: Sun },
+  { key: "common.foundations", url: "/foundations", icon: Building2 },
   { key: "common.telegram", url: "/telegram", icon: Send },
   { key: "common.learning", url: "/learn", icon: BookOpen },
   { key: "common.pricing", url: "/pricing", icon: CreditCard },
@@ -74,27 +76,70 @@ export function AppSidebar() {
 
               {user?.role === "admin" && (
                 <>
+                  <div className={`px-2 py-2 ${!collapsed ? "mt-4 pt-4 border-t border-sidebar-border" : ""}`}>
+                    {!collapsed && <p className="text-xs font-semibold text-sidebar-foreground/50 uppercase tracking-wider">Admin Tools</p>}
+                  </div>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={isActive("/admin/pricing")}>
+                      <NavLink to="/admin/pricing" end className="hover:bg-sidebar-accent/50" activeClassName="bg-sidebar-accent text-sidebar-primary font-medium">
+                        <CreditCard className="mr-2 h-4 w-4" />
+                        {!collapsed && <span>Pricing</span>}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={isActive("/admin/telegram")}>
+                      <NavLink to="/admin/telegram" end className="hover:bg-sidebar-accent/50" activeClassName="bg-sidebar-accent text-sidebar-primary font-medium">
+                        <Send className="mr-2 h-4 w-4" />
+                        {!collapsed && <span>Telegram Posts</span>}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={isActive("/admin/learning")}>
+                      <NavLink to="/admin/learning" end className="hover:bg-sidebar-accent/50" activeClassName="bg-sidebar-accent text-sidebar-primary font-medium">
+                        <BookOpen className="mr-2 h-4 w-4" />
+                        {!collapsed && <span>Learning</span>}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={isActive("/admin/calendar")}>
+                      <NavLink to="/admin/calendar" end className="hover:bg-sidebar-accent/50" activeClassName="bg-sidebar-accent text-sidebar-primary font-medium">
+                        <CalendarDays className="mr-2 h-4 w-4" />
+                        {!collapsed && <span>{t("admin.manageCalendar")}</span>}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={isActive("/admin/orders")}>
+                      <NavLink to="/admin/orders" end className="hover:bg-sidebar-accent/50" activeClassName="bg-sidebar-accent text-sidebar-primary font-medium">
+                        <ShoppingCart className="mr-2 h-4 w-4" />
+                        {!collapsed && <span>Orders</span>}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={isActive("/admin/mentors")}>
+                      <NavLink to="/admin/mentors" end className="hover:bg-sidebar-accent/50" activeClassName="bg-sidebar-accent text-sidebar-primary font-medium">
+                        <GraduationCap className="mr-2 h-4 w-4" />
+                        {!collapsed && <span>Mentors</span>}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
                   <SidebarMenuItem>
                     <SidebarMenuButton asChild isActive={isActive("/admin/users")}>
                       <NavLink to="/admin/users" end className="hover:bg-sidebar-accent/50" activeClassName="bg-sidebar-accent text-sidebar-primary font-medium">
                         <User className="mr-2 h-4 w-4" />
-                        {!collapsed && <span>{t("admin.users")}</span>}
+                        {!collapsed && <span>Users</span>}
                       </NavLink>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                   <SidebarMenuItem>
                     <SidebarMenuButton asChild isActive={isActive("/admin/submissions")}>
                       <NavLink to="/admin/submissions" end className="hover:bg-sidebar-accent/50" activeClassName="bg-sidebar-accent text-sidebar-primary font-medium">
-                        <GlobeLock className="mr-2 h-4 w-4" />
-                        {!collapsed && <span>{t("profile.submissions")}</span>}
-                      </NavLink>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={isActive("/admin/tutors")}>
-                      <NavLink to="/admin/tutors" end className="hover:bg-sidebar-accent/50" activeClassName="bg-sidebar-accent text-sidebar-primary font-medium">
-                        <GraduationCap className="mr-2 h-4 w-4" />
-                        {!collapsed && <span>{t("admin.tutors")}</span>}
+                        <FileText className="mr-2 h-4 w-4" />
+                        {!collapsed && <span>Submissions</span>}
                       </NavLink>
                     </SidebarMenuButton>
                   </SidebarMenuItem>

@@ -3,6 +3,7 @@ import "reflect-metadata";
 import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import { AppDataSource } from "./config/database.js";
+import { config } from "./config/env.js";
 import grantsRouter from "./routes/grants.js";
 import learningRouter from "./routes/learning.js";
 import telegramRouter from "./routes/telegram.js";
@@ -11,20 +12,18 @@ import authRouter from "./routes/auth.js";
 import submissionsRouter from "./routes/submissions.js";
 import adminUsersRouter from "./routes/adminUsers.js";
 import ordersRouter from "./routes/orders.js";
+import calendarRouter from "./routes/calendar.js";
 import path from "path";
 
 const app = express();
-const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors({
-  origin: process.env.FRONTEND_URL || "http://localhost:5173",
+  origin: config.frontendUrl,
   credentials: true,
 }));
-// allow larger JSON bodies for profile image uploads (base64)
-const jsonLimit = process.env.JSON_LIMIT || "5mb";
-app.use(express.json({ limit: jsonLimit }));
-app.use(express.urlencoded({ extended: true, limit: jsonLimit }));
+app.use(express.json({ limit: config.jsonLimit }));
+app.use(express.urlencoded({ extended: true, limit: config.jsonLimit }));
 
 // Health check
 app.get("/health", (req, res) => {
@@ -37,17 +36,13 @@ app.use("/api/learning", learningRouter);
 app.use("/api/telegram", telegramRouter);
 app.use("/api/pricing", pricingRouter);
 app.use("/api/auth", authRouter);
+app.use("/api/calendar", calendarRouter);
 
-// serve uploaded files
-app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
+// Public learning assets only — submission files require authentication via /api/submissions/files/:filename
+app.use("/uploads/learning", express.static(path.join(process.cwd(), "uploads/learning")));
 
-// submissions
 app.use("/api/submissions", submissionsRouter);
-
-// orders
 app.use("/api/orders", ordersRouter);
-
-// admin routes
 app.use("/api/admin/users", adminUsersRouter);
 
 // Error handling middleware
@@ -62,8 +57,8 @@ const startServer = async () => {
     await AppDataSource.initialize();
     console.log("✓ Database connected successfully");
 
-    app.listen(PORT, () => {
-      console.log(`✓ Server is running on http://localhost:${PORT}`);
+    app.listen(config.port, () => {
+      console.log(`✓ Server is running on http://localhost:${config.port}`);
     });
   } catch (error) {
     console.error("✗ Error starting server:", error);
