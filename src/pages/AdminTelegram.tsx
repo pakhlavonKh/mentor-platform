@@ -29,6 +29,7 @@ export default function AdminTelegram() {
     description: { en: "", ru: "", kz: "" },
     source: "",
     link: "",
+    publish: true,
   });
 
   const [editPost, setEditPost] = useState<any>(null);
@@ -144,9 +145,15 @@ export default function AdminTelegram() {
                 <Input value={newPost.link} onChange={(e) => setNewPost({ ...newPost, link: e.target.value })} placeholder="https://..." />
               </div>
             </div>
-            <Button onClick={() => createMutation.mutate(newPost)} className="gradient-primary" disabled={createMutation.isPending}>
-              {createMutation.isPending ? "Creating..." : "Create Post"}
-            </Button>
+            <div className="flex items-center gap-4">
+              <label className="flex items-center gap-2">
+                <input type="checkbox" checked={newPost.publish} onChange={(e) => setNewPost({ ...newPost, publish: e.target.checked })} />
+                <span className="text-sm">Publish to Telegram</span>
+              </label>
+              <Button onClick={() => createMutation.mutate(newPost)} className="gradient-primary" disabled={createMutation.isPending}>
+                {createMutation.isPending ? "Creating..." : "Create Post"}
+              </Button>
+            </div>
           </div>
         </Card>
 
@@ -168,6 +175,10 @@ export default function AdminTelegram() {
                       <Input value={editPost.link} onChange={(e) => setEditPost({ ...editPost, link: e.target.value })} placeholder="Link" />
                     </div>
                     <div className="flex gap-2">
+                      <label className="flex items-center gap-2">
+                        <input type="checkbox" checked={!!editPost?.publish} onChange={(e) => setEditPost({ ...editPost, publish: e.target.checked })} />
+                        <span className="text-sm">Publish to Telegram</span>
+                      </label>
                       <Button onClick={() => updateMutation.mutate({ id: post.id, data: editPost })} className="gradient-primary" disabled={updateMutation.isPending}>
                         Save
                       </Button>

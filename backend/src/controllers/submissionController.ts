@@ -44,8 +44,8 @@ function sanitizeSubmissions(submissions: Submission[]) {
 async function canAccessSubmission(userId: string, submission: Submission): Promise<boolean> {
   if (submission.userId === userId) return true;
   if (submission.reviewerId === userId) return true;
-  const user = await userRepository.findOne({ where: { id: userId } });
-  return user?.role === "admin";
+  // Do NOT allow admins or tutors to access submissions unless they are the reviewer
+  return false;
 }
 
 export const createSubmission = async (req: Request, res: Response) => {

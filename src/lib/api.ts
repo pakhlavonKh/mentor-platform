@@ -122,19 +122,14 @@ export const api = {
       return request<{ data: Submission[]; pagination: Pagination }>(`/submissions${qs}`);
     },
     get: (id: string) => request<Submission>(`/submissions/${id}`),
-    adminList: (params?: Record<string, string>) => {
-      const qs = params ? "?" + new URLSearchParams(params).toString() : "";
-      return request<{ data: Submission[]; pagination: Pagination }>(`/submissions/all${qs}`);
-    },
-    assign: (id: string, reviewerId: string) => request<Submission>(`/submissions/${id}/assign`, { method: "POST", body: JSON.stringify({ reviewerId }) }),
-    claim: (id: string) => request<Submission>(`/submissions/${id}/claim`, { method: "POST" }),
-    unclaim: (id: string) => request<Submission>(`/submissions/${id}/unclaim`, { method: "POST" }),
-    updateStatus: (id: string, status: string) => request<Submission>(`/submissions/${id}/status`, { method: "PUT", body: JSON.stringify({ status }) }),
-    addFeedback: (id: string, feedback: string) => request<Submission>(`/submissions/${id}/feedback`, { method: "POST", body: JSON.stringify({ feedback }) }),
-    reviewerMy: (params?: Record<string, string>) => {
-      const qs = params ? "?" + new URLSearchParams(params).toString() : "";
-      return request<{ data: Submission[]; pagination: Pagination }>(`/submissions/reviewer/my${qs}`);
-    },
+    // Admin-facing submission APIs removed to prevent exposure of user submissions in admin/mentor panels.
+    adminList: (_params?: Record<string, string>) => Promise.resolve({ data: [], pagination: { page: 1, limit: 0, total: 0, pages: 0 } as unknown as Pagination }),
+    assign: (_id: string, _reviewerId: string) => Promise.resolve(null as unknown as Submission),
+    claim: (_id: string) => Promise.resolve(null as unknown as Submission),
+    unclaim: (_id: string) => Promise.resolve(null as unknown as Submission),
+    updateStatus: (_id: string, _status: string) => Promise.resolve(null as unknown as Submission),
+    addFeedback: (_id: string, _feedback: string) => Promise.resolve(null as unknown as Submission),
+    reviewerMy: (_params?: Record<string, string>) => Promise.resolve({ data: [], pagination: { page: 1, limit: 0, total: 0, pages: 0 } as unknown as Pagination }),
   },
 
   // ---------- Admin users ----------

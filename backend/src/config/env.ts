@@ -56,6 +56,8 @@ export const config = {
     phone: getEnv("TELEGRAM_PHONE", "+905551234567")!,
     channelUrl: getEnv("TELEGRAM_CHANNEL_URL", "https://t.me/studyqadam_corporate")!,
     channelUsername: getEnv("TELEGRAM_CHANNEL_USERNAME", "@studyqadam_corporate")!,
+    botToken: getEnv("TELEGRAM_BOT_TOKEN"),
+    managementChatId: getEnv("TELEGRAM_MANAGEMENT_CHAT_ID"),
   },
   upload: {
     dir: getEnv("UPLOAD_DIR", "uploads/submissions")!,

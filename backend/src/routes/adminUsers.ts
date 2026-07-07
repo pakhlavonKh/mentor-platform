@@ -19,5 +19,6 @@ router.get("/", authenticate, authorizeRole("admin"), listUsers);
 router.get("/:id", authenticate, authorizeRole("admin"), getUserById);
 router.put("/:id/role", authenticate, authorizeRole("admin"), updateUserRole);
 router.delete("/:id", authenticate, authorizeRole("admin"), deleteUser);
+router.put("/:id/telegram", authenticate, authorizeRole("admin"), updateUserTelegramId);
 
 export default router;

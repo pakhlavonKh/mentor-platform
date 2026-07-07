@@ -25,6 +25,9 @@ export class User {
   })
   role!: "admin" | "student" | "tutor";
 
+  @Column({ type: "varchar", nullable: true })
+  telegramId?: string | null;
+
   @Column({ type: "boolean", default: true })
   isActive!: boolean;
 

@@ -135,14 +135,7 @@ export function AppSidebar() {
                       </NavLink>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={isActive("/admin/submissions")}>
-                      <NavLink to="/admin/submissions" end className="hover:bg-sidebar-accent/50" activeClassName="bg-sidebar-accent text-sidebar-primary font-medium">
-                        <FileText className="mr-2 h-4 w-4" />
-                        {!collapsed && <span>Submissions</span>}
-                      </NavLink>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
+                  {/* Submissions removed from Admin/Mentor panels per policy */}
                 </>
               )}
             </SidebarMenu>

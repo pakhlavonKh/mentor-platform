@@ -22,18 +22,6 @@ router.post("/", authenticate, upload.array("files", 5), createSubmission);
 router.get("/files/:filename", authenticate, downloadSubmissionFile);
 router.get("/", authenticate, getUserSubmissions);
 router.get("/:id", authenticate, getSubmissionById);
-
-// Admin / reviewer endpoints
-router.get("/all", authenticate, authorizeRole("admin", "tutor"), listAllSubmissions);
-router.put("/:id/status", authenticate, authorizeRole("admin", "tutor"), updateSubmissionStatus);
-router.post("/:id/feedback", authenticate, authorizeRole("admin", "tutor"), addFeedback);
-
-// assign reviewer (admin)
-router.post("/:id/assign", authenticate, authorizeRole("admin"), assignReviewer);
-
-// claim/unclaim by reviewer
-router.post("/:id/claim", authenticate, authorizeRole("tutor", "admin"), claimSubmission);
-router.post("/:id/unclaim", authenticate, authorizeRole("tutor", "admin"), unclaimSubmission);
-router.get("/reviewer/my", authenticate, authorizeRole("tutor", "admin"), getReviewerSubmissions);
+// NOTE: Submissions are intentionally NOT exposed to Admin or Mentor panels per policy.
 
 export default router;

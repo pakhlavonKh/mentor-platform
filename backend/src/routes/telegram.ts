@@ -14,8 +14,8 @@ const router = Router();
 router.get("/", getTelegramPosts);
 router.get("/config", getTelegramConfig);
 router.get("/:id", getTelegramPostById);
-router.post("/", authenticate, authorizeRole("admin", "mentor"), createTelegramPost);
-router.put("/:id", authenticate, authorizeRole("admin", "mentor"), updateTelegramPost);
-router.delete("/:id", authenticate, authorizeRole("admin", "mentor"), deleteTelegramPost);
+router.post("/", authenticate, authorizeRole("admin"), createTelegramPost);
+router.put("/:id", authenticate, authorizeRole("admin"), updateTelegramPost);
+router.delete("/:id", authenticate, authorizeRole("admin"), deleteTelegramPost);
 
 export default router;

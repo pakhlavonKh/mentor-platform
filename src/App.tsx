@@ -24,7 +24,6 @@ import AdminOrders from "./pages/AdminOrders";
 import MentorDashboard from "./pages/MentorDashboard";
 import AdminUsers from "./pages/AdminUsers";
 import AdminMentors from "./pages/AdminMentors";
-import AdminSubmissions from "./pages/AdminSubmissions";
 import TutorsPage from "./pages/TutorsPage";
 import CheckoutPage from "./pages/CheckoutPage";
 import NotFound from "./pages/NotFound";
@@ -70,7 +69,7 @@ function AppContent() {
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/admin/users" element={isLoggedIn && user?.role === "admin" ? <AdminUsers /> : <Navigate to="/login" replace />} />
           <Route path="/admin/mentors" element={isLoggedIn && user?.role === "admin" ? <AdminMentors /> : <Navigate to="/login" replace />} />
-          <Route path="/admin/submissions" element={isLoggedIn && user?.role === "admin" ? <AdminSubmissions /> : <Navigate to="/login" replace />} />
+          {/* Submissions removed from Admin/Mentor panels per policy */}
           <Route path="/admin/pricing" element={isLoggedIn && user?.role === "admin" ? <AdminPricing /> : <Navigate to="/login" replace />} />
           <Route path="/admin/telegram" element={isLoggedIn && user?.role === "admin" ? <AdminTelegram /> : <Navigate to="/login" replace />} />
           <Route path="/admin/learning" element={isLoggedIn && user?.role === "admin" ? <AdminLearning /> : <Navigate to="/login" replace />} />

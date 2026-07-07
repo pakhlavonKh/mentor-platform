@@ -14,6 +14,7 @@ import adminUsersRouter from "./routes/adminUsers.js";
 import ordersRouter from "./routes/orders.js";
 import calendarRouter from "./routes/calendar.js";
 import path from "path";
+import { createBot } from "./services/telegramService.js";
 
 const app = express();
 
@@ -56,6 +57,20 @@ const startServer = async () => {
   try {
     await AppDataSource.initialize();
     console.log("✓ Database connected successfully");
+
+    // Initialize Telegram bot (if configured)
+    try {
+      const bot = createBot();
+      if (bot) {
+        // Start polling in non-production for simplicity; in production prefer webhooks
+        if (!config.isProduction) {
+          bot.launch();
+          console.log("✓ Telegram bot started (polling)");
+        }
+      }
+    } catch (e) {
+      console.error("Failed to initialize Telegram bot:", e);
+    }
 
     app.listen(config.port, () => {
       console.log(`✓ Server is running on http://localhost:${config.port}`);

@@ -54,6 +54,19 @@ export const updateUserRole = async (req: Request, res: Response) => {
   }
 };
 
+export const updateUserTelegramId = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { telegramId } = req.body;
+    await userRepository.update(id, { telegramId } as Partial<User>);
+    const updated = await userRepository.findOne({ where: { id } });
+    res.json(updated ? sanitizeUser(updated) : null);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error updating user telegramId", error: errorMessage(error) });
+  }
+};
+
 export const deleteUser = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
