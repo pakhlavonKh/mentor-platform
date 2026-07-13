@@ -228,6 +228,8 @@ export default function AdminDashboard() {
                       <option value="master">{t("grants.master") || "Master"}</option>
                       <option value="phd">PhD</option>
                       <option value="internship">{t("grants.internship") || "Internship"}</option>
+                      <option value="summer_program">{t("grants.summer_program") || "Summer Program"}</option>
+                      <option value="foundation">{t("grants.foundation") || "Foundation"}</option>
                     </select>
                   </div>
                 </div>

@@ -91,6 +91,14 @@ export const en = {
     type: "Type",
     searchPlaceholder: "Search grants...",
   },
+  summerPrograms: {
+    title: "Summer Programs",
+    description: "Explore summer schools, short courses, and academic camps worldwide",
+  },
+  foundations: {
+    title: "Foundation Programs",
+    description: "Find university preparatory and foundation year courses (Foundation)",
+  },
   learning: {
     title: "Learning Center",
     description: "Master the art of scholarship applications",

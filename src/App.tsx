@@ -9,6 +9,8 @@ import { AuthProvider } from "@/context/AuthContext";
 import { useAuth } from "@/context/AuthContext";
 import HomePage from "./pages/HomePage";
 import GrantsPage from "./pages/GrantsPage";
+import SummerProgramsPage from "./pages/SummerProgramsPage";
+import FoundationsPage from "./pages/FoundationsPage";
 import TelegramPage from "./pages/TelegramPage";
 import LearnPage from "./pages/LearnPage";
 import LearningDetail from "./pages/LearningDetail";

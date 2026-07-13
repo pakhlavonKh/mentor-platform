@@ -15,6 +15,7 @@ import { User, Mail, BookOpen, Bookmark, FileCheck, CreditCard, Clock, CheckCirc
 import { api, type LearningContent, type Grant, type Submission, type Order, downloadAuthenticatedFile } from "@/lib/api";
 import { useLocale } from "@/hooks/use-locale";
 import { GrantCard } from "@/components/GrantCard";
+import { DashboardCalendar } from "@/components/DashboardCalendar";
 import { ProfileCalendar } from "@/components/ProfileCalendar";
 import { motion } from "framer-motion";
 import { toast } from "sonner";

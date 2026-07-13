@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Search } from "lucide-react";
 import { motion } from "framer-motion";
 
-const types = ["bachelor", "master", "phd", "internship"] as const;
+const types = ["bachelor", "master", "phd", "internship", "summer_program", "foundation"] as const;
 
 export default function GrantsPage() {
   const { t } = useTranslation();
