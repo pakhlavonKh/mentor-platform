@@ -26,11 +26,8 @@ import AdminOrders from "./pages/AdminOrders";
 import MentorDashboard from "./pages/MentorDashboard";
 import AdminUsers from "./pages/AdminUsers";
 import AdminMentors from "./pages/AdminMentors";
-import TutorsPage from "./pages/TutorsPage";
 import CheckoutPage from "./pages/CheckoutPage";
 import NotFound from "./pages/NotFound";
-import SummerProgramsPage from "./pages/SummerProgramsPage";
-import FoundationsPage from "./pages/FoundationsPage";
 import AdminCalendar from "./pages/AdminCalendar";
 
 const queryClient = new QueryClient();
@@ -64,7 +61,7 @@ function AppContent() {
           
           <Route
             path="/mentor"
-            element={isLoggedIn && user?.role === "mentor" ? <MentorDashboard /> : <Navigate to="/login" replace />}
+            element={isLoggedIn && (user?.role === "mentor" || user?.role === "tutor") ? <MentorDashboard /> : <Navigate to="/login" replace />}
           />
           <Route path="/pricing" element={<PricingPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
@@ -77,7 +74,6 @@ function AppContent() {
           <Route path="/admin/learning" element={isLoggedIn && user?.role === "admin" ? <AdminLearning /> : <Navigate to="/login" replace />} />
           <Route path="/admin/calendar" element={isLoggedIn && user?.role === "admin" ? <AdminCalendar /> : <Navigate to="/login" replace />} />
           <Route path="/admin/orders" element={isLoggedIn && user?.role === "admin" ? <AdminOrders /> : <Navigate to="/login" replace />} />
-          <Route path="/admin/tutors" element={<TutorsPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignUpPage />} />
           <Route path="*" element={<NotFound />} />

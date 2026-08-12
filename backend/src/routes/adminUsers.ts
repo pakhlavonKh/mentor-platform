@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { listUsers, getUserById, updateUserRole, deleteUser, listMentors, createMentor, deactivateMentor, reactivateMentor, deleteMentor, deactivateStudent, reactivateStudent } from "../controllers/adminController.js";
+import { listUsers, getUserById, updateUserRole, deleteUser, listMentors, createMentor, deactivateMentor, reactivateMentor, deleteMentor, deactivateStudent, reactivateStudent, updateUserTelegramId } from "../controllers/adminController.js";
 import { authenticate, authorizeRole } from "../middleware/auth.js";
 
 const router = Router();

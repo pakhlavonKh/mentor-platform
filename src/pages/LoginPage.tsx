@@ -27,7 +27,7 @@ export default function LoginPage() {
       toast.success(t("auth.loginSuccess"));
       const role = (user && user.role) || localStorage.getItem("userData") ? JSON.parse(localStorage.getItem("userData") || "null")?.role : null;
       if (role === "admin") navigate("/admin");
-      else if (role === "mentor") navigate("/mentor");
+      else if (role === "mentor" || role === "tutor") navigate("/mentor");
       else navigate("/");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : t("auth.loginError"));
@@ -59,7 +59,7 @@ export default function LoginPage() {
               toast.success(t("auth.loginSuccess"));
               const role = (user && user.role) || localStorage.getItem("userData") ? JSON.parse(localStorage.getItem("userData") || "null")?.role : null;
               if (role === "admin") navigate("/admin");
-              else if (role === "mentor") navigate("/mentor");
+              else if (role === "mentor" || role === "tutor") navigate("/mentor");
               else navigate("/");
             } catch (err) {
               toast.error("Google sign-in failed");

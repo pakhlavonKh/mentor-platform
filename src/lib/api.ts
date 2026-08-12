@@ -26,7 +26,7 @@ async function request<T>(endpoint: string, options?: RequestInit): Promise<T> {
 }
 
 // ---------- Auth ----------
-export type UserRole = "admin" | "mentor" | "student";
+export type UserRole = "admin" | "mentor" | "tutor" | "student";
 
 export interface AuthResponse {
   id: string;
@@ -254,6 +254,7 @@ export interface User {
   firstName: string;
   lastName: string;
   role: "admin" | "mentor" | "student" | "tutor";
+  isActive?: boolean;
   profilePicture?: string | null;
 }
 
