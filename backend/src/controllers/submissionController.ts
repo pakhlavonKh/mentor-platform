@@ -129,26 +129,30 @@ export const downloadSubmissionFile = async (req: Request, res: Response) => {
       .createQueryBuilder("submission")
       .leftJoinAndSelect("submission.user", "user")
       .leftJoinAndSelect("submission.reviewer", "reviewer")
-      .where("submission.files::text LIKE :filenamePattern OR submission.feedbackFiles::text LIKE :filenamePattern", {
-        filenamePattern: `%"filename":"${filename}"%`,
+      .where('submission."files"::text LIKE :filenamePattern OR submission."feedbackFiles"::text LIKE :filenamePattern', {
+        filenamePattern: `%${filename}%`,
       })
       .getOne();
 
     if (!submission) return res.status(404).json({ message: "File not found" });
 
-    const hasFile =
-      (submission.files || []).some((f) => f.filename === filename) ||
-      (submission.feedbackFiles || []).some((f) => f.filename === filename);
+    const matchedFile =
+      (submission.files || []).find((f) => f.filename === filename) ||
+      (submission.feedbackFiles || []).find((f) => f.filename === filename);
 
-    if (!hasFile) return res.status(404).json({ message: "File not found" });
+    if (!matchedFile) return res.status(404).json({ message: "File not found" });
 
     const user = await userRepository.findOne({ where: { id: userId } });
     const allowed = await canAccessSubmission(userId, submission, user?.role);
     if (!allowed) return res.status(403).json({ message: "Forbidden" });
 
-    if (!fs.existsSync(filePath)) return res.status(404).json({ message: "File not found" });
+    const resolvedPath = matchedFile.path && fs.existsSync(path.resolve(process.cwd(), matchedFile.path))
+      ? path.resolve(process.cwd(), matchedFile.path)
+      : filePath;
 
-    res.sendFile(filePath);
+    if (!fs.existsSync(resolvedPath)) return res.status(404).json({ message: "File not found on disk" });
+
+    res.download(resolvedPath, matchedFile.originalName || filename);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Error downloading file", error: errorMessage(error) });
