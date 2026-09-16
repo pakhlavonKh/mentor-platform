@@ -1,8 +1,10 @@
 import { Request, Response } from "express";
+import crypto from "crypto";
 import bcrypt from "bcryptjs";
 import { AppDataSource } from "../config/database.js";
 import { User } from "../entities/User.js";
 import { sanitizeUser, sanitizeUsers } from "../utils/sanitizeUser.js";
+import { config } from "../config/env.js";
 
 const errorMessage = (error: unknown) => (error instanceof Error ? error.message : "Unexpected error");
 
@@ -112,6 +114,7 @@ export const createMentor = async (req: Request, res: Response) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
+    const linkToken = "m_" + crypto.randomBytes(16).toString("hex");
 
     const mentor = userRepository.create({
       email,
@@ -120,16 +123,55 @@ export const createMentor = async (req: Request, res: Response) => {
       password: hashedPassword,
       role: "tutor",
       isActive: true,
+      telegramLinkToken: linkToken,
     });
 
     const savedMentor = await userRepository.save(mentor);
     const responseMentor = { ...savedMentor };
     delete (responseMentor as any).password;
 
-    res.json({ message: "Mentor created successfully", mentor: responseMentor });
+    const botUsername = (config.telegram.botUsername || "studyqadam_bot").replace(/^@/, "");
+    const deepLink = `https://t.me/${botUsername}?start=link_${linkToken}`;
+
+    res.json({
+      message: "Mentor created successfully",
+      mentor: responseMentor,
+      telegramLinkToken: linkToken,
+      telegramDeepLink: deepLink,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Error creating mentor", error: errorMessage(error) });
+  }
+};
+
+export const getMentorTelegramLink = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const mentor = await userRepository.findOne({ where: { id, role: "tutor" } });
+    if (!mentor) {
+      return res.status(404).json({ message: "Mentor not found" });
+    }
+
+    if (!mentor.telegramLinkToken) {
+      mentor.telegramLinkToken = "m_" + crypto.randomBytes(16).toString("hex");
+      await userRepository.save(mentor);
+    }
+
+    const botUsername = (config.telegram.botUsername || "studyqadam_bot").replace(/^@/, "");
+    const deepLink = `https://t.me/${botUsername}?start=link_${mentor.telegramLinkToken}`;
+
+    res.json({
+      mentorId: mentor.id,
+      mentorName: `${mentor.firstName} ${mentor.lastName}`,
+      telegramId: mentor.telegramId || null,
+      isLinked: !!mentor.telegramId,
+      token: mentor.telegramLinkToken,
+      deepLink,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error generating mentor telegram link", error: errorMessage(error) });
   }
 };
 

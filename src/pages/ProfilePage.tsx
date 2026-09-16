@@ -11,7 +11,8 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, Mail, BookOpen, Bookmark, FileCheck, CreditCard, Clock, CheckCircle2, LogOut, ArrowRight, Camera } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { User, Mail, BookOpen, Bookmark, FileCheck, CreditCard, Clock, CheckCircle2, LogOut, ArrowRight, Camera, Star } from "lucide-react";
 import { api, type LearningContent, type Grant, type Submission, type Order, downloadAuthenticatedFile } from "@/lib/api";
 import { useLocale } from "@/hooks/use-locale";
 import { GrantCard } from "@/components/GrantCard";
@@ -41,15 +42,25 @@ export default function ProfilePage() {
 
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [docType, setDocType] = useState("motivation_letter");
 
   useEffect(() => {
     if (!isLoggedIn) {
       navigate("/login");
+      return;
+    }
+    if (user?.role === "admin") {
+      navigate("/admin", { replace: true });
+      return;
+    }
+    if (user?.role === "mentor" || user?.role === "tutor") {
+      navigate("/mentor", { replace: true });
+      return;
     }
     // fetch submissions and orders
     api.submissions.list().then((res) => setSubmissions(res.data)).catch(() => {});
     api.orders.list().then((res) => setOrders(res.data)).catch(() => {});
-  }, [isLoggedIn, navigate]);
+  }, [isLoggedIn, navigate, user?.role]);
 
   // initialize edit state from user (safe defaults if user is not yet loaded)
   const [editing, setEditing] = useState(false);
@@ -281,91 +292,287 @@ export default function ProfilePage() {
           </div>
         </motion.div>
 
-        {/* Review Status */}
+        {/* Review Status & Submissions */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
           <Card className="shadow-soft border border-border/60">
-            <CardHeader>
-              <h3 className="font-display font-semibold text-lg text-card-foreground">{t("profile.documentReviews")}</h3>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+              <div>
+                <h3 className="font-display font-semibold text-lg text-card-foreground">
+                  {t("profile.documentReviews") || "Document Mentorship & Reviews"}
+                </h3>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Submit your essays and CVs to receive detailed feedback from expert mentors.
+                </p>
+              </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-6">
+              {/* Modern Upload Form */}
+              <div className="p-5 bg-muted/30 border border-border/60 rounded-xl space-y-4">
+                <div className="flex items-center gap-2">
+                  <FileCheck className="h-5 w-5 text-primary" />
+                  <span className="font-semibold text-sm text-foreground">Submit New Document for Review</span>
+                </div>
+
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-foreground">Document Type</label>
+                    <Select value={docType} onValueChange={setDocType}>
+                      <SelectTrigger className="w-full h-9 text-xs">
+                        <SelectValue placeholder="Select document type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="motivation_letter">Motivation Letter / Statement of Purpose</SelectItem>
+                        <SelectItem value="cv_resume">CV / Resume</SelectItem>
+                        <SelectItem value="recommendation_letter">Recommendation Letter</SelectItem>
+                        <SelectItem value="research_proposal">Research Proposal</SelectItem>
+                        <SelectItem value="other">Other Document</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-foreground">Target University / Scholarship</label>
+                    <Input
+                      id="upload-target-uni"
+                      placeholder="e.g. Oxford MSc CS, DAAD, Fulbright..."
+                      className="h-9 text-xs"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-foreground">Questions or Notes for Mentor (Optional)</label>
+                  <Input
+                    id="upload-student-notes"
+                    placeholder="e.g. Please check if my leadership paragraph sounds persuasive..."
+                    className="h-9 text-xs"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-foreground">Attach Document (.pdf, .docx, .doc)</label>
+                  <Input
+                    id="submission-files"
+                    type="file"
+                    multiple
+                    accept=".pdf,.doc,.docx"
+                    className="text-xs file:text-xs file:font-medium h-9"
+                  />
+                </div>
+
+                <div className="pt-1 flex justify-end">
+                  <Button
+                    size="sm"
+                    className="gap-2 font-medium shadow-sm"
+                    onClick={async () => {
+                      const input = document.getElementById("submission-files") as HTMLInputElement | null;
+                      const targetUni = (document.getElementById("upload-target-uni") as HTMLInputElement | null)?.value;
+                      const notes = (document.getElementById("upload-student-notes") as HTMLInputElement | null)?.value;
+
+                      if (!input || !input.files || input.files.length === 0) {
+                        toast.error("Please select a document file to upload");
+                        return;
+                      }
+
+                      const form = new FormData();
+                      for (let i = 0; i < input.files.length; i++) {
+                        form.append("files", input.files[i]);
+                      }
+                      if (docType) form.append("documentType", docType);
+                      if (targetUni) form.append("targetUniversity", targetUni);
+                      if (notes) form.append("studentNotes", notes);
+
+                      try {
+                        await api.submissions.upload(form);
+                        toast.success("Document submitted! A mentor will review it shortly.");
+                        input.value = "";
+                        const uniInput = document.getElementById("upload-target-uni") as HTMLInputElement | null;
+                        if (uniInput) uniInput.value = "";
+                        const notesInput = document.getElementById("upload-student-notes") as HTMLInputElement | null;
+                        if (notesInput) notesInput.value = "";
+
+                        const res = await api.submissions.list();
+                        setSubmissions(res.data);
+                      } catch (err) {
+                        const e = err as Error;
+                        toast.error(e.message || "Upload failed");
+                      }
+                    }}
+                  >
+                    <FileCheck className="h-4 w-4" />
+                    Submit for Review
+                  </Button>
+                </div>
+              </div>
+
+              {/* Submissions List */}
               <div className="space-y-4">
-                <div className="grid gap-3">
-                      <div className="p-3 border rounded">
-                        <div className="font-medium mb-2">Upload documents for review</div>
-                        <input type="file" multiple onChange={(e) => { /* handled on submit */ }} id="submission-files" />
-                        <div className="mt-3">
-                          <Button onClick={async () => {
-                            const input = document.getElementById("submission-files") as HTMLInputElement | null;
-                            if (!input || !input.files || input.files.length === 0) {
-                              toast.error("Select files to upload");
-                              return;
-                            }
-                            const form = new FormData();
-                            for (let i = 0; i < input.files.length; i++) form.append("files", input.files[i]);
-                            try {
-                              await api.submissions.upload(form);
-                              toast.success("Files uploaded");
-                              const res = await api.submissions.list();
-                              setSubmissions(res.data);
-                            } catch (err) {
-                              const e = err as Error;
-                              toast.error(e.message || "Upload failed");
-                            }
-                          }}>Upload</Button>
+                <h4 className="font-semibold text-sm text-foreground">Your Submissions & Feedback</h4>
+
+                {submissions.map((s) => {
+                  const isCompleted = s.status === "completed";
+                  const isInReview = s.status === "in_review";
+                  const isPending = s.status === "pending";
+
+                  const getDocLabel = (type?: string) => {
+                    switch (type) {
+                      case "motivation_letter": return "Motivation Letter";
+                      case "cv_resume": return "CV / Resume";
+                      case "recommendation_letter": return "Recommendation Letter";
+                      case "research_proposal": return "Research Proposal";
+                      default: return type || "Application Document";
+                    }
+                  };
+
+                  return (
+                    <div key={s.id} className="p-4 sm:p-5 border border-border/60 rounded-xl space-y-3 bg-card shadow-sm">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-semibold text-foreground text-sm">
+                              {getDocLabel(s.documentType)}
+                            </span>
+                            {isCompleted && (
+                              <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-0 text-xs">
+                                Feedback Ready
+                              </Badge>
+                            )}
+                            {isInReview && (
+                              <Badge className="bg-blue-500/10 text-blue-600 dark:text-blue-400 border-0 text-xs">
+                                Under Review by Mentor
+                              </Badge>
+                            )}
+                            {isPending && (
+                              <Badge variant="outline" className="text-amber-600 bg-amber-500/10 border-amber-500/20 text-xs">
+                                Waiting for Mentor
+                              </Badge>
+                            )}
+                            {s.status === "rejected" && (
+                              <Badge variant="destructive" className="text-xs">
+                                Revision Requested
+                              </Badge>
+                            )}
+                          </div>
+                          <div className="text-xs text-muted-foreground mt-1">
+                            Target: <span className="text-foreground font-medium">{s.targetUniversity || "General Review"}</span> • Submitted {new Date(s.createdAt).toLocaleDateString()}
+                          </div>
+                        </div>
+
+                        {/* Download Original File */}
+                        {s.files && s.files.length > 0 && (
+                          <div className="flex items-center gap-2">
+                            {s.files.map((file, i) => (
+                              <Button
+                                key={i}
+                                variant="outline"
+                                size="sm"
+                                className="h-8 gap-1.5 text-xs"
+                                onClick={async () => {
+                                  if (!file?.url) return;
+                                  try {
+                                    await downloadAuthenticatedFile(file.url, file.originalName || "document");
+                                  } catch {
+                                    toast.error("Download failed");
+                                  }
+                                }}
+                              >
+                                <FileCheck className="h-3.5 w-3.5 text-primary" />
+                                <span className="max-w-[140px] truncate">{file.originalName}</span>
+                              </Button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Notes if provided */}
+                      {s.studentNotes && (
+                        <p className="text-xs text-muted-foreground bg-muted/40 p-2.5 rounded border border-border/40">
+                          <span className="font-semibold text-foreground">Your Notes:</span> {s.studentNotes}
+                        </p>
+                      )}
+
+                      {/* Mentor Feedback Section */}
+                      {s.feedback && (
+                        <div className="mt-3 p-4 rounded-lg bg-primary/5 border border-primary/20 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                              <span className="font-semibold text-xs text-foreground">
+                                Mentor Feedback {s.reviewer ? `by ${s.reviewer.firstName} ${s.reviewer.lastName}` : ""}
+                              </span>
+                            </div>
+                            {s.rating && (
+                              <div className="flex items-center gap-1 text-amber-500 text-xs font-semibold">
+                                <Star className="h-3.5 w-3.5 fill-amber-500" />
+                                {s.rating} / 5
+                              </div>
+                            )}
+                          </div>
+                          <p className="text-xs text-foreground/90 whitespace-pre-wrap leading-relaxed">
+                            {s.feedback}
+                          </p>
+
+                          {/* Mentor annotated files */}
+                          {s.feedbackFiles && s.feedbackFiles.length > 0 && (
+                            <div className="pt-2 flex items-center gap-2 flex-wrap">
+                              <span className="text-xs font-semibold text-foreground">Annotated Feedback File:</span>
+                              {s.feedbackFiles.map((ff, idx) => (
+                                <Button
+                                  key={idx}
+                                  variant="secondary"
+                                  size="sm"
+                                  className="h-7 text-xs gap-1.5 shadow-sm"
+                                  onClick={async () => {
+                                    if (!ff?.url) return;
+                                    try {
+                                      await downloadAuthenticatedFile(ff.url, ff.originalName || "feedback-document");
+                                    } catch {
+                                      toast.error("Download failed");
+                                    }
+                                  }}
+                                >
+                                  <FileCheck className="h-3.5 w-3.5 text-emerald-600" />
+                                  <span className="max-w-[160px] truncate">{ff.originalName}</span>
+                                </Button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+
+                {submissions.length === 0 && (
+                  <div className="text-center py-8">
+                    <FileCheck className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />
+                    <p className="text-muted-foreground text-sm">{t("profile.noReviews") || "No documents submitted yet."}</p>
+                    <p className="text-xs text-muted-foreground mt-1">Upload your motivation letter or CV above to get started.</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Order History */}
+              <Separator />
+              <div>
+                <h4 className="font-semibold text-sm text-foreground mb-3">Your Orders & Packages</h4>
+                <div className="space-y-2">
+                  {orders.map((o) => (
+                    <div key={o.id} className="p-3 border border-border/60 rounded-lg flex items-center justify-between text-xs">
+                      <div>
+                        <div className="font-semibold text-foreground">Package Order #{o.id.slice(0, 8)}</div>
+                        <div className="text-muted-foreground mt-0.5">
+                          Status: <span className="font-medium capitalize text-foreground">{o.status}</span> • {o.documents} Reviews Included • ${o.price}
                         </div>
                       </div>
-                  {submissions.map((s) => (
-                    <div key={s.id} className="p-3 border rounded">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <div className="font-medium">Submitted {new Date(s.createdAt).toLocaleString()}</div>
-                          <div className="text-sm text-muted-foreground">Status: {s.status}</div>
-                        </div>
-                        <div>
-                          <Button
-                            variant="link"
-                            className="text-primary underline p-0 h-auto"
-                            onClick={async () => {
-                              const file = s.files[0];
-                              if (!file?.url) return;
-                              try {
-                                await downloadAuthenticatedFile(file.url, file.originalName || "document");
-                              } catch {
-                                toast.error("Download failed");
-                              }
-                            }}
-                          >
-                            Download
-                          </Button>
-                        </div>
-                      </div>
-                      {s.feedback && <div className="mt-2 text-sm bg-muted p-2 rounded">Feedback: {s.feedback}</div>}
+                      <Badge variant="outline" className="capitalize text-xs font-normal">
+                        {o.status}
+                      </Badge>
                     </div>
                   ))}
-                  {submissions.length === 0 && <div className="text-center py-8">
-                    <FileCheck className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />
-                    <p className="text-muted-foreground">{t("profile.noReviews")}</p>
-                    <p className="text-sm text-muted-foreground mt-1">{t("profile.purchaseReview")}</p>
-                    <Button variant="outline" className="mt-4 rounded-full" asChild>
-                      <a href="/pricing">{t("profile.viewPackages")}</a>
-                    </Button>
-                  </div>}
-                </div>
-                <div>
-                  <h4 className="font-semibold">Your Orders</h4>
-                  <div className="space-y-2 mt-2">
-                    {orders.map((o) => (
-                      <div key={o.id} className="p-3 border rounded flex items-center justify-between">
-                        <div>
-                          <div className="font-medium">Order: {o.id}</div>
-                          <div className="text-sm text-muted-foreground">Status: {o.status} — {o.documents} docs — {o.price}</div>
-                        </div>
-                        <div>
-                          <a href={`/profile`} className="text-primary underline">View</a>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                  {orders.length === 0 && (
+                    <p className="text-xs text-muted-foreground">No review packages purchased yet.</p>
+                  )}
                 </div>
               </div>
             </CardContent>

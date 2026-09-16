@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { useState } from "react";
-import { Menu, X, User } from "lucide-react";
+import { Menu, X, User, Shield, LayoutDashboard, LogOut } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -21,12 +21,12 @@ const NAV_ITEMS = [
 export function HeaderNav() {
   const location = useLocation();
   const { t } = useTranslation();
-  const { isLoggedIn, user } = useAuth();
+  const { isLoggedIn, user, logout } = useAuth();
   const [open, setOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 bg-background/90 backdrop-blur-md border-b border-border/50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-50 bg-background/90 backdrop-blur-md border-b border-border/50 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2.5">
@@ -39,10 +39,7 @@ export function HeaderNav() {
 
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-1 relative">
-            {(NAV_ITEMS
-              .filter((item) => item.path !== "/learn" || isLoggedIn)
-              .concat(user?.role === "admin" ? [{ labelKey: "admin.dashboardTitle", path: "/admin" }] : [])
-              .map((item) => {
+            {NAV_ITEMS.filter((item) => item.path !== "/learn" || isLoggedIn).map((item) => {
               const isActive = location.pathname === item.path;
 
               return (
@@ -78,28 +75,62 @@ export function HeaderNav() {
                   </span>
                 </Link>
               );
-            }))}
+            })}
           </nav>
 
           {/* Right side */}
-          <div className="hidden md:flex items-center gap-4">
+          <div className="hidden md:flex items-center gap-3">
             <LanguageSwitcher />
 
             {isLoggedIn ? (
-              <Link to="/profile">
+              <div className="flex items-center gap-2">
+                {user?.role === "admin" ? (
+                  <Link to="/admin">
+                    <Button
+                      size="sm"
+                      className="gradient-primary text-primary-foreground rounded-full px-5 hover:opacity-90 gap-2 shadow-sm font-medium"
+                    >
+                      <Shield className="h-4 w-4" />
+                      {t("admin.dashboardTitle")}
+                    </Button>
+                  </Link>
+                ) : user?.role === "mentor" || user?.role === "tutor" ? (
+                  <Link to="/mentor">
+                    <Button
+                      size="sm"
+                      className="gradient-primary text-primary-foreground rounded-full px-5 hover:opacity-90 gap-2 shadow-sm font-medium"
+                    >
+                      <LayoutDashboard className="h-4 w-4" />
+                      {t("admin.mentorWorkspace")}
+                    </Button>
+                  </Link>
+                ) : (
+                  <Link to="/profile">
+                    <Button
+                      size="sm"
+                      className="gradient-primary text-primary-foreground rounded-full px-5 hover:opacity-90 gap-2 shadow-sm font-medium"
+                    >
+                      <User className="h-4 w-4" />
+                      {t("common.profile")}
+                    </Button>
+                  </Link>
+                )}
+
                 <Button
-                  size="sm"
-                  className="gradient-primary text-primary-foreground rounded-full px-5 hover:opacity-90 gap-2"
+                  variant="ghost"
+                  size="icon"
+                  onClick={logout}
+                  className="rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                  title={t("common.logout")}
                 >
-                  <User className="h-4 w-4" />
-                  {t("common.profile")}
+                  <LogOut className="h-4 w-4" />
                 </Button>
-              </Link>
+              </div>
             ) : (
               <Link to="/login">
                 <Button
                   size="sm"
-                  className="gradient-primary text-primary-foreground rounded-full px-5 hover:opacity-90"
+                  className="gradient-primary text-primary-foreground rounded-full px-5 hover:opacity-90 font-medium"
                 >
                   {t("common.login")}
                 </Button>
@@ -156,19 +187,64 @@ export function HeaderNav() {
 
                 <div className="pt-6 space-y-3 text-center">
                   {isLoggedIn ? (
-                    <Link
-                      to="/profile"
-                      className="w-full"
-                      onClick={() => setOpen(false)}
-                    >
+                    <div className="space-y-3 flex flex-col items-center">
+                      {user?.role === "admin" ? (
+                        <Link
+                          to="/admin"
+                          className="w-full"
+                          onClick={() => setOpen(false)}
+                        >
+                          <Button
+                            size="lg"
+                            className="w-fit mx-auto gradient-primary text-primary-foreground gap-2 rounded-full font-medium"
+                          >
+                            <Shield className="h-4 w-4" />
+                            {t("admin.dashboardTitle")}
+                          </Button>
+                        </Link>
+                      ) : user?.role === "mentor" || user?.role === "tutor" ? (
+                        <Link
+                          to="/mentor"
+                          className="w-full"
+                          onClick={() => setOpen(false)}
+                        >
+                          <Button
+                            size="lg"
+                            className="w-fit mx-auto gradient-primary text-primary-foreground gap-2 rounded-full font-medium"
+                          >
+                            <LayoutDashboard className="h-4 w-4" />
+                            {t("admin.mentorWorkspace")}
+                          </Button>
+                        </Link>
+                      ) : (
+                        <Link
+                          to="/profile"
+                          className="w-full"
+                          onClick={() => setOpen(false)}
+                        >
+                          <Button
+                            size="lg"
+                            className="w-fit mx-auto gradient-primary text-primary-foreground gap-2 rounded-full font-medium"
+                          >
+                            <User className="h-4 w-4" />
+                            {t("common.profile")}
+                          </Button>
+                        </Link>
+                      )}
+
                       <Button
-                        size="lg"
-                        className="w-fit mx-auto gradient-primary text-primary-foreground gap-2"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          logout();
+                          setOpen(false);
+                        }}
+                        className="text-destructive gap-1.5"
                       >
-                        <User className="h-4 w-4" />
-                        {t("common.profile")}
+                        <LogOut className="h-4 w-4" />
+                        {t("common.logout")}
                       </Button>
-                    </Link>
+                    </div>
                   ) : (
                     <Link
                       to="/login"
@@ -177,7 +253,7 @@ export function HeaderNav() {
                     >
                       <Button
                         size="lg"
-                        className="w-fit mx-auto  gradient-primary rounded-full text-primary-foreground text-base"
+                        className="w-fit mx-auto gradient-primary rounded-full text-primary-foreground text-base font-medium"
                       >
                         {t("common.login")}
                       </Button>

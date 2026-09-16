@@ -47,8 +47,8 @@ export default function HomePage() {
     <PageLayout noPadding>
       {/* Hero */}
       <section className="relative overflow-hidden h-[calc(100vh-4rem)]">
-        <div className="gradient-hero h-full">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center justify-center">
+        <div className="gradient-hero h-full px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto h-full flex items-center justify-center">
             <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center w-full h-full">
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="space-y-6 sm:space-y-8 flex flex-col justify-center h-full">
                 <Badge variant="secondary" className="rounded-full px-4 py-1.5 font-body text-xs w-fit">
@@ -169,23 +169,25 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto text-center">
           <h2 className="font-display text-3xl font-bold text-foreground">{t("home.reviewPackages")}</h2>
           <p className="text-muted-foreground mt-3 mb-8 max-w-md mx-auto">{t("home.reviewPackagesDesc")}</p>
-          <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+          <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto items-stretch">
             {pricingPlans.map((plan, i) => (
-              <motion.div key={plan.id} custom={i} variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }}>
-                <Card className={`border shadow-soft hover:shadow-hover transition-all h-full ${plan.popular ? "border-primary ring-1 ring-primary/20 shadow-elevated relative" : "border-border/60"}`}>
+              <motion.div key={plan.id} custom={i} variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }} className="h-full flex flex-col">
+                <Card className={`border shadow-soft hover:shadow-hover transition-all h-full flex flex-col justify-between ${plan.popular ? "border-primary ring-1 ring-primary/20 shadow-elevated relative" : "border-border/60"}`}>
                   {plan.popular && (
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                       <Badge className="gradient-primary text-primary-foreground rounded-full px-3">{t("common.mostPopular")}</Badge>
                     </div>
                   )}
-                  <CardContent className="p-6 pt-8 text-center space-y-4">
-                    <h3 className="font-display text-lg font-semibold text-card-foreground">{lt(plan.name)}</h3>
-                    <div>
-                      <span className="font-display text-4xl font-bold text-card-foreground">${plan.price}</span>
+                  <CardContent className="p-6 pt-8 text-center flex-1 flex flex-col justify-between space-y-4">
+                    <div className="space-y-4">
+                      <h3 className="font-display text-lg font-semibold text-card-foreground">{lt(plan.name)}</h3>
+                      <div>
+                        <span className="font-display text-4xl font-bold text-card-foreground">${plan.price}</span>
+                      </div>
+                      <p className="text-sm text-muted-foreground">{t("grantsFilter.documentsReviewed", { count: plan.documents })}</p>
                     </div>
-                    <p className="text-sm text-muted-foreground">{t("grantsFilter.documentsReviewed", { count: plan.documents })}</p>
-                    <Link to="/pricing">
-                      <Button className={`w-full rounded-full mt-2 ${plan.popular ? "gradient-primary text-primary-foreground hover:opacity-90" : ""}`} variant={plan.popular ? "default" : "outline"}>
+                    <Link to="/pricing" className="block mt-auto pt-2">
+                      <Button className={`w-full rounded-full ${plan.popular ? "gradient-primary text-primary-foreground hover:opacity-90" : ""}`} variant={plan.popular ? "default" : "outline"}>
                         {t("common.getStarted")}
                       </Button>
                     </Link>

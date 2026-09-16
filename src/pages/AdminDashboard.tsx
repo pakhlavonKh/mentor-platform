@@ -10,6 +10,8 @@ import { api } from "@/lib/api";
 import type { Grant, Pagination } from "@/lib/api";
 import { toast } from "sonner";
 import { Trash2, Edit2 } from "lucide-react";
+import { DatePicker } from "@/components/ui/date-picker";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function AdminDashboard() {
   const { t } = useTranslation();
@@ -223,27 +225,37 @@ export default function AdminDashboard() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-foreground mb-2">{t("admin.type") || "Type"}</label>
-                    <select value={type} onChange={(e) => setType(e.target.value as Grant["type"])} className="w-full rounded-md border px-3 py-2">
-                      <option value="bachelor">{t("grants.bachelor") || "Bachelor"}</option>
-                      <option value="master">{t("grants.master") || "Master"}</option>
-                      <option value="phd">PhD</option>
-                      <option value="internship">{t("grants.internship") || "Internship"}</option>
-                      <option value="summer_program">{t("grants.summer_program") || "Summer Program"}</option>
-                      <option value="foundation">{t("grants.foundation") || "Foundation"}</option>
-                    </select>
+                    <Select value={type} onValueChange={(v) => setType(v as Grant["type"])}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="bachelor">{t("grants.bachelor") || "Bachelor"}</SelectItem>
+                        <SelectItem value="master">{t("grants.master") || "Master"}</SelectItem>
+                        <SelectItem value="phd">PhD</SelectItem>
+                        <SelectItem value="internship">{t("grants.internship") || "Internship"}</SelectItem>
+                        <SelectItem value="summer_program">{t("grants.summer_program") || "Summer Program"}</SelectItem>
+                        <SelectItem value="foundation">{t("grants.foundation") || "Foundation"}</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-foreground mb-2">{t("admin.funding") || "Funding"}</label>
-                    <select value={funding} onChange={(e) => setFunding(e.target.value as Grant["funding"])} className="w-full rounded-md border px-3 py-2">
-                      <option value="full">{t("grants.fullFunding") || "Fully Funded"}</option>
-                      <option value="partial">{t("grants.partialFunding") || "Partial"}</option>
-                    </select>
+                    <Select value={funding} onValueChange={(v) => setFunding(v as Grant["funding"])}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select funding" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="full">{t("grants.fullFunding") || "Fully Funded"}</SelectItem>
+                        <SelectItem value="partial">{t("grants.partialFunding") || "Partial"}</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-foreground mb-2">{t("admin.deadline") || "Deadline"}</label>
-                    <Input type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} />
+                    <DatePicker value={deadline} onChange={setDeadline} placeholder={t("admin.deadline") || "Select deadline"} />
                   </div>
                 </div>
                 <div>
@@ -281,7 +293,11 @@ export default function AdminDashboard() {
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                           <Input value={editState.country} onChange={(e) => setEditState({ ...editState, country: e.target.value })} placeholder="Country" />
-                          <Input type="date" value={editState.deadline} onChange={(e) => setEditState({ ...editState, deadline: e.target.value })} />
+                          <DatePicker
+                            value={editState.deadline}
+                            onChange={(d) => setEditState({ ...editState, deadline: d })}
+                            placeholder={t("admin.deadline") || "Select deadline"}
+                          />
                         </div>
                         <div className="flex gap-2">
                           <Button onClick={() => saveEdit(grant.id)} className="gradient-primary" disabled={updateMutation.isPending}>

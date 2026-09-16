@@ -21,9 +21,15 @@ export default function PricingPage() {
             {t("pricing.description")}
           </p>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 items-stretch">
           {plans.map((plan, i) => (
-            <motion.div key={plan.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
+            <motion.div
+              key={plan.id}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.1 }}
+              className="h-full flex flex-col"
+            >
               <PricingCard plan={plan} />
             </motion.div>
           ))}

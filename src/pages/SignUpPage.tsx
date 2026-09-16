@@ -5,9 +5,11 @@ import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Eye, EyeOff } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Eye, EyeOff, ShieldCheck } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
+import { GoogleAuthButton } from "@/components/GoogleAuthButton";
 
 export default function SignUpPage() {
   const { t } = useTranslation();
@@ -20,6 +22,7 @@ export default function SignUpPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [agreeLegal, setAgreeLegal] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -27,6 +30,11 @@ export default function SignUpPage() {
 
     if (password !== confirmPassword) {
       toast.error(t("auth.passwordMismatch"));
+      return;
+    }
+
+    if (!agreeLegal) {
+      toast.error(t("auth.consentRequired"));
       return;
     }
 
@@ -174,6 +182,60 @@ export default function SignUpPage() {
                 </div>
               </div>
 
+              {/* Legal & Personal Data Processing Consent */}
+              <div className="rounded-lg border border-border/80 bg-secondary/30 p-3.5 space-y-2">
+                <div className="flex items-start space-x-2.5">
+                  <Checkbox
+                    id="terms-consent"
+                    checked={agreeLegal}
+                    onCheckedChange={(checked) => setAgreeLegal(checked === true)}
+                    disabled={loading}
+                    className="mt-0.5"
+                  />
+                  <label
+                    htmlFor="terms-consent"
+                    className="text-xs text-muted-foreground leading-relaxed cursor-pointer select-none"
+                  >
+                    {t("auth.termsConsent")}{" "}
+                    <Link
+                      to="/terms"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-primary font-medium underline hover:text-primary/80"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {t("auth.termsOfService")}
+                    </Link>{" "}
+                    {t("auth.and")}{" "}
+                    {t("auth.privacyConsent")}{" "}
+                    <Link
+                      to="/privacy"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-primary font-medium underline hover:text-primary/80"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {t("auth.personalData")}
+                    </Link>{" "}
+                    {t("auth.underThe")}{" "}
+                    <Link
+                      to="/privacy"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-primary font-medium underline hover:text-primary/80"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {t("auth.privacyPolicy")}
+                    </Link>
+                    .
+                  </label>
+                </div>
+                <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground/80 pl-6">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                  <span>{t("auth.parentalNotice")}</span>
+                </div>
+              </div>
+
               <Button
                 type="submit"
                 disabled={loading}
@@ -182,22 +244,16 @@ export default function SignUpPage() {
                 {loading ? t("common.apply") : t("auth.registerNow")}
               </Button>
 
-              <div className="relative my-6">
+              <div className="relative my-4">
                 <div className="absolute inset-0 flex items-center">
                   <div className="w-full border-t border-border/30" />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background px-2 text-muted-foreground">Or</span>
+                  <span className="bg-background px-2 text-muted-foreground">{t("auth.or")}</span>
                 </div>
               </div>
 
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full rounded-lg h-10"
-              >
-                Continue with Google
-              </Button>
+              <GoogleAuthButton text="signup_with" />
             </form>
           </CardContent>
         </Card>

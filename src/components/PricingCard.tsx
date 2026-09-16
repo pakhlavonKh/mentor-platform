@@ -14,7 +14,7 @@ export function PricingCard({ plan }: PricingCardProps) {
   const { t } = useTranslation();
   const { lt, la } = useLocale();
   return (
-    <Card className={`relative shadow-soft hover:shadow-hover transition-all duration-300 border rounded-2xl ${plan.popular ? "border-primary shadow-elevated ring-1 ring-primary/20" : "border-border/60"}`}>
+    <Card className={`relative shadow-soft hover:shadow-hover transition-all duration-300 border rounded-2xl h-full flex flex-col ${plan.popular ? "border-primary shadow-elevated ring-1 ring-primary/20" : "border-border/60"}`}>
       {plan.popular && (
         <div className="absolute -top-3 left-1/2 -translate-x-1/2">
           <Badge className="gradient-primary text-primary-foreground shadow-sm">{t("pricing.popular")}</Badge>
@@ -27,17 +27,17 @@ export function PricingCard({ plan }: PricingCardProps) {
           <span className="font-display text-4xl font-bold text-card-foreground">${plan.price}</span>
         </div>
       </CardHeader>
-      <CardContent className="pb-4">
+      <CardContent className="pb-4 flex-1">
         <ul className="space-y-2.5">
           {la(plan.features).map((feature) => (
             <li key={feature} className="flex items-center gap-2 text-sm text-muted-foreground">
               <Check className="h-4 w-4 text-primary shrink-0" />
-              {feature}
+              <span>{feature}</span>
             </li>
           ))}
         </ul>
       </CardContent>
-      <CardFooter>
+      <CardFooter className="pt-2 mt-auto">
         <Button className={`w-full ${plan.popular ? "gradient-primary text-primary-foreground hover:opacity-90" : ""}`} variant={plan.popular ? "default" : "outline"}>
           {t("pricing.getStarted")}
         </Button>

@@ -1,5 +1,4 @@
 import { Request, Response } from "express";
-import type { File as MulterFile } from "multer";
 import { AppDataSource } from "../config/database.js";
 import { LearningContent } from "../entities/LearningContent.js";
 
@@ -57,7 +56,7 @@ export const getLearningContentById = async (req: Request, res: Response) => {
 export const createLearningContent = async (req: Request, res: Response) => {
   try {
     const { title, type, topic, description, duration, thumbnailUrl } = req.body;
-    const file = (req as Request & { file?: MulterFile }).file;
+    const file = (req as Request & { file?: Express.Multer.File }).file;
 
     if (!file) {
       return res.status(400).json({ message: "File is required" });

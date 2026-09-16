@@ -10,6 +10,7 @@ import { api, type CalendarEvent, type CalendarCategory } from "@/lib/api";
 import { useLocale } from "@/hooks/use-locale";
 import { toast } from "sonner";
 import { Trash2, Edit2, CalendarDays } from "lucide-react";
+import { DatePicker } from "@/components/ui/date-picker";
 
 const emptyLocalized = { en: "", ru: "", kz: "" };
 const categories: CalendarCategory[] = ["grant_deadline", "event", "application", "platform"];
@@ -102,7 +103,11 @@ export default function AdminCalendar() {
             {renderLocalizedFields(t("admin.eventTitle"), newEvent.title, (title) => setNewEvent({ ...newEvent, title }))}
             {renderLocalizedFields(t("admin.eventDescription"), newEvent.description, (description) => setNewEvent({ ...newEvent, description }))}
             <div className="grid sm:grid-cols-2 gap-3">
-              <Input type="date" value={newEvent.date} onChange={(e) => setNewEvent({ ...newEvent, date: e.target.value })} />
+              <DatePicker
+                value={newEvent.date}
+                onChange={(date) => setNewEvent({ ...newEvent, date })}
+                placeholder={t("admin.eventDate") || "Select event date"}
+              />
               <Select value={newEvent.category} onValueChange={(v) => setNewEvent({ ...newEvent, category: v as CalendarCategory })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -128,7 +133,11 @@ export default function AdminCalendar() {
                 {editingId === event.id && editEvent ? (
                   <div className="space-y-3">
                     {renderLocalizedFields(t("admin.eventTitle"), editEvent.title || emptyLocalized, (title) => setEditEvent({ ...editEvent, title }))}
-                    <Input type="date" value={editEvent.date || ""} onChange={(e) => setEditEvent({ ...editEvent, date: e.target.value })} />
+                    <DatePicker
+                      value={editEvent.date || ""}
+                      onChange={(date) => setEditEvent({ ...editEvent, date })}
+                      placeholder={t("admin.eventDate") || "Select event date"}
+                    />
                     <Select value={editEvent.category} onValueChange={(v) => setEditEvent({ ...editEvent, category: v as CalendarCategory })}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>

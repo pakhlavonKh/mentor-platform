@@ -113,23 +113,52 @@ export const api = {
   },
   // ---------- Submissions ----------
   submissions: {
-    upload: (form: FormData) => fetch(`${API_BASE}/submissions`, { method: "POST", body: form, headers: { ...(localStorage.getItem("authToken") ? { Authorization: `Bearer ${localStorage.getItem("authToken")}` } : {}) } }).then(async (r) => {
-      if (!r.ok) throw new Error(await r.text());
-      return r.json();
-    }),
+    upload: (form: FormData) =>
+      fetch(`${API_BASE}/submissions`, {
+        method: "POST",
+        body: form,
+        headers: {
+          ...(localStorage.getItem("authToken") ? { Authorization: `Bearer ${localStorage.getItem("authToken")}` } : {}),
+        },
+      }).then(async (r) => {
+        if (!r.ok) throw new Error(await r.text());
+        return r.json();
+      }),
     list: (params?: Record<string, string>) => {
       const qs = params ? "?" + new URLSearchParams(params).toString() : "";
       return request<{ data: Submission[]; pagination: Pagination }>(`/submissions${qs}`);
     },
     get: (id: string) => request<Submission>(`/submissions/${id}`),
-    // Admin-facing submission APIs removed to prevent exposure of user submissions in admin/mentor panels.
-    adminList: (_params?: Record<string, string>) => Promise.resolve({ data: [], pagination: { page: 1, limit: 0, total: 0, pages: 0 } as unknown as Pagination }),
-    assign: (_id: string, _reviewerId: string) => Promise.resolve(null as unknown as Submission),
-    claim: (_id: string) => Promise.resolve(null as unknown as Submission),
-    unclaim: (_id: string) => Promise.resolve(null as unknown as Submission),
-    updateStatus: (_id: string, _status: string) => Promise.resolve(null as unknown as Submission),
-    addFeedback: (_id: string, _feedback: string) => Promise.resolve(null as unknown as Submission),
-    reviewerMy: (_params?: Record<string, string>) => Promise.resolve({ data: [], pagination: { page: 1, limit: 0, total: 0, pages: 0 } as unknown as Pagination }),
+    pool: (params?: Record<string, string>) => {
+      const qs = params ? "?" + new URLSearchParams(params).toString() : "";
+      return request<{ data: Submission[]; pagination: Pagination }>(`/submissions/pool${qs}`);
+    },
+    reviewerMy: (params?: Record<string, string>) => {
+      const qs = params ? "?" + new URLSearchParams(params).toString() : "";
+      return request<{ data: Submission[]; pagination: Pagination }>(`/submissions/reviewer/my${qs}`);
+    },
+    claim: (id: string) => request<Submission>(`/submissions/${id}/claim`, { method: "POST" }),
+    unclaim: (id: string) => request<Submission>(`/submissions/${id}/unclaim`, { method: "POST" }),
+    updateStatus: (id: string, status: string) =>
+      request<Submission>(`/submissions/${id}/status`, { method: "PUT", body: JSON.stringify({ status }) }),
+    addFeedback: (id: string, form: FormData) =>
+      fetch(`${API_BASE}/submissions/${id}/feedback`, {
+        method: "POST",
+        body: form,
+        headers: {
+          ...(localStorage.getItem("authToken") ? { Authorization: `Bearer ${localStorage.getItem("authToken")}` } : {}),
+        },
+      }).then(async (r) => {
+        if (!r.ok) {
+          const err = await r.json().catch(() => ({ message: "Failed to submit feedback" }));
+          throw new Error(err.message || "Failed to submit feedback");
+        }
+        return r.json();
+      }),
+    adminList: (params?: Record<string, string>) => {
+      const qs = params ? "?" + new URLSearchParams(params).toString() : "";
+      return request<{ data: Submission[]; pagination: Pagination }>(`/submissions/all${qs}`);
+    },
   },
 
   // ---------- Admin users ----------
@@ -147,7 +176,9 @@ export const api = {
       return request<{ data: User[]; pagination: Pagination }>(`/admin/users/mentors/list${qs}`);
     },
     createMentor: (payload: { email: string; firstName: string; lastName: string; password: string }) =>
-      request<{ message: string; mentor: User }>(`/admin/users/mentors`, { method: "POST", body: JSON.stringify(payload) }),
+      request<{ message: string; mentor: User; telegramLinkToken?: string; telegramDeepLink?: string }>(`/admin/users/mentors`, { method: "POST", body: JSON.stringify(payload) }),
+    getMentorTelegramLink: (id: string) =>
+      request<{ mentorId: string; mentorName: string; telegramId: string | null; isLinked: boolean; token: string; deepLink: string }>(`/admin/users/mentors/${id}/telegram-link`),
     deactivateMentor: (id: string) => request<{ message: string; mentor: User }>(`/admin/users/mentors/${id}/deactivate`, { method: "PUT", body: JSON.stringify({}) }),
     reactivateMentor: (id: string) => request<{ message: string; mentor: User }>(`/admin/users/mentors/${id}/reactivate`, { method: "PUT", body: JSON.stringify({}) }),
     deleteMentor: (id: string) => request<{ message: string }>(`/admin/users/mentors/${id}`, { method: "DELETE" }),
@@ -265,9 +296,15 @@ export interface Submission {
   reviewerId?: string | null;
   reviewer?: User | null;
   learningContentId?: string | null;
-  files: { filename: string; originalName: string; size: number; mimeType: string; path: string; url?: string }[];
+  documentType?: "motivation_letter" | "cv_resume" | "recommendation_letter" | "research_proposal" | "other" | string;
+  targetUniversity?: string | null;
+  studentNotes?: string | null;
+  files: { filename: string; originalName: string; size: number; mimeType: string; path?: string; url?: string }[];
+  feedbackFiles?: { filename: string; originalName: string; size: number; mimeType: string; path?: string; url?: string }[] | null;
   status: "pending" | "in_review" | "completed" | "rejected";
   feedback?: string | null;
+  rating?: number | null;
+  reviewedAt?: string | null;
   createdAt: string;
   updatedAt: string;
 }

@@ -18,9 +18,25 @@ import { createBot } from "./services/telegramService.js";
 
 const app = express();
 
+// Trust reverse proxy (Nginx)
+app.set("trust proxy", 1);
+
 // Middleware
+const allowedOrigins = config.frontendUrl.includes(",")
+  ? config.frontendUrl.split(",").map((s) => s.trim())
+  : [config.frontendUrl];
+
 app.use(cors({
-  origin: config.frontendUrl,
+  origin: (origin, callback) => {
+    // allow requests with no origin (like mobile apps, curl, or same-origin)
+    if (!origin || allowedOrigins.includes(origin) || allowedOrigins.includes("*")) {
+      return callback(null, true);
+    }
+    if (config.isProduction) {
+      return callback(new Error(`Origin ${origin} not allowed by CORS`));
+    }
+    return callback(null, true);
+  },
   credentials: true,
 }));
 app.use(express.json({ limit: config.jsonLimit }));

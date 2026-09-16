@@ -26,7 +26,8 @@ export const authenticate = (req: AuthRequest, res: Response, next: NextFunction
   }
 };
 
-export const authorizeRole = (...allowedRoles: Array<string>) => {
+export const authorizeRole = (...allowedRoles: Array<string | string[]>) => {
+  const roles = allowedRoles.flat();
   return async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       if (!req.userId) return res.status(401).json({ message: "Unauthorized" });
@@ -36,7 +37,11 @@ export const authorizeRole = (...allowedRoles: Array<string>) => {
 
       if (!user) return res.status(401).json({ message: "User not found" });
 
-      if (!allowedRoles.includes(user.role)) {
+      if (user.isActive === false) {
+        return res.status(403).json({ message: "Account deactivated" });
+      }
+
+      if (!roles.includes(user.role)) {
         return res.status(403).json({ message: "Forbidden: insufficient permissions" });
       }
 

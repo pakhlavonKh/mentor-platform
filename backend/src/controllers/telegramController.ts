@@ -77,7 +77,7 @@ export const createTelegramPost = async (req: Request, res: Response) => {
         const text = `${title.en}\n\n${description.en}\n\n${link || ""}`;
 
         // detect first image link in description or link
-        const imageRegex = /(https?:\\/\\/[^\s]+\.(?:jpg|jpeg|png|gif))/i;
+        const imageRegex = /(https?:\/\/[^\s]+\.(?:jpg|jpeg|png|gif))/i;
         const imageMatch = (description.en || "").match(imageRegex) || (link || "").match(imageRegex);
 
           if (imageMatch) {
@@ -112,7 +112,7 @@ export const updateTelegramPost = async (req: Request, res: Response) => {
         if (bot && (config.telegram.channelUsername || config.telegram.channelUrl)) {
           const chatId = config.telegram.channelUsername || config.telegram.channelUrl;
           const text = `${post.title.en}\n\n${post.description.en}\n\n${post.link || ""}`;
-          const imageRegex = /(https?:\\/\\/[^\s]+\.(?:jpg|jpeg|png|gif))/i;
+          const imageRegex = /(https?:\/\/[^\s]+\.(?:jpg|jpeg|png|gif))/i;
           const imageMatch = (post.description.en || "").match(imageRegex) || (post.link || "").match(imageRegex);
           if (imageMatch) await bot.telegram.sendPhoto(chatId as string, imageMatch[0], { caption: text, parse_mode: "HTML" });
           else await bot.telegram.sendMessage(chatId as string, text, { parse_mode: "HTML" });

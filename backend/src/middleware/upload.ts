@@ -34,9 +34,22 @@ const learningStorage = multer.diskStorage({
 const MAX_BYTES = config.upload.maxBytes;
 const MAX_VIDEO_BYTES = config.upload.maxVideoBytes;
 
+const ALLOWED_SUBMISSION_EXTS = [
+  ".pdf", ".doc", ".docx", ".txt", ".rtf", ".odt", ".pages",
+  ".jpg", ".jpeg", ".png", ".webp"
+];
+
 const upload = multer({
   storage,
   limits: { fileSize: MAX_BYTES },
+  fileFilter: (req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (ALLOWED_SUBMISSION_EXTS.includes(ext)) {
+      cb(null, true);
+    } else {
+      cb(new Error(`File extension "${ext || "unknown"}" is not permitted. Please upload a document (PDF, DOC, DOCX, TXT) or image.`));
+    }
+  },
 });
 
 export const uploadLearning = multer({

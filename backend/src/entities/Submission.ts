@@ -36,9 +36,28 @@ export class Submission {
   @Column({ type: "text", nullable: true })
   feedback?: string | null;
 
+  @Column({ type: "varchar", length: 100, nullable: true, default: "motivation_letter" })
+  documentType?: string | null;
+
+  @Column({ type: "varchar", length: 255, nullable: true })
+  targetUniversity?: string | null;
+
+  @Column({ type: "text", nullable: true })
+  studentNotes?: string | null;
+
+  @Column("jsonb", { nullable: true, default: () => "'[]'" })
+  feedbackFiles?: { filename: string; originalName: string; size: number; mimeType: string; path: string; url?: string }[] | null;
+
+  @Column({ type: "int", nullable: true })
+  rating?: number | null;
+
+  @Column({ type: "timestamp", nullable: true })
+  reviewedAt?: Date | null;
+
   @CreateDateColumn()
   createdAt!: Date;
 
   @UpdateDateColumn()
   updatedAt!: Date;
 }
+

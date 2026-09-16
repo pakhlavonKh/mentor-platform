@@ -9,6 +9,14 @@ import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -18,7 +26,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Trash2, Power, PowerOff, Search, Eye, EyeOff, Users, CheckCircle2, XCircle, UserCheck } from "lucide-react";
+import { Plus, Trash2, Power, PowerOff, Search, Eye, EyeOff, Users, CheckCircle2, XCircle, UserCheck, Send, QrCode, Copy, Check, ExternalLink, RefreshCw } from "lucide-react";
 
 export default function AdminMentors() {
   const { t } = useTranslation();
@@ -34,6 +42,17 @@ export default function AdminMentors() {
     lastName: "",
     password: "",
   });
+
+  const [onboardingData, setOnboardingData] = useState<{
+    mentorId: string;
+    mentorName: string;
+    deepLink: string;
+    token: string;
+    telegramId?: string | null;
+    isLinked?: boolean;
+  } | null>(null);
+  const [copied, setCopied] = useState(false);
+  const [loadingLink, setLoadingLink] = useState(false);
 
   const { data, isLoading } = useQuery<{ data: User[]; pagination: Pagination }>({
     queryKey: ["admin-mentors"],
@@ -55,13 +74,43 @@ export default function AdminMentors() {
   const activeCount = useMemo(() => mentors.filter((m) => m.isActive !== false).length, [mentors]);
   const inactiveCount = useMemo(() => mentors.filter((m) => m.isActive === false).length, [mentors]);
 
+  const openTelegramLinkModal = async (mentor: User) => {
+    try {
+      setLoadingLink(true);
+      const res = await api.admin.getMentorTelegramLink(mentor.id);
+      setOnboardingData(res);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to load mentor Telegram link");
+    } finally {
+      setLoadingLink(false);
+    }
+  };
+
+  const handleCopyLink = () => {
+    if (!onboardingData?.deepLink) return;
+    navigator.clipboard.writeText(onboardingData.deepLink);
+    setCopied(true);
+    toast.success("Telegram invite link copied to clipboard!");
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   const createMentor = useMutation({
     mutationFn: (payload: typeof formData) => api.admin.createMentor(payload),
-    onSuccess: () => {
+    onSuccess: (res: any) => {
       toast.success(t("admin.mentorCreated") || "Mentor created successfully");
       setFormData({ email: "", firstName: "", lastName: "", password: "" });
       setShowCreateForm(false);
       queryClient.invalidateQueries({ queryKey: ["admin-mentors"] });
+
+      if (res.telegramDeepLink) {
+        setOnboardingData({
+          mentorId: res.mentor.id,
+          mentorName: `${res.mentor.firstName} ${res.mentor.lastName}`,
+          deepLink: res.telegramDeepLink,
+          token: res.telegramLinkToken || "",
+          isLinked: false,
+        });
+      }
     },
     onError: (error: any) => {
       toast.error(error.message || "Failed to create mentor");
@@ -287,10 +336,34 @@ export default function AdminMentors() {
                           )}
                         </div>
                         <div className="text-sm text-muted-foreground mt-0.5">{mentor.email}</div>
+                        <div className="mt-1.5 flex items-center gap-2">
+                          {mentor.telegramId ? (
+                            <Badge variant="outline" className="text-emerald-600 dark:text-emerald-400 border-emerald-500/30 gap-1 text-[11px] py-0 px-2 font-normal">
+                              <Send className="w-2.5 h-2.5 text-sky-500" />
+                              Telegram Linked
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="text-muted-foreground border-border text-[11px] py-0 px-2 font-normal">
+                              Telegram Pending
+                            </Badge>
+                          )}
+                        </div>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => openTelegramLinkModal(mentor)}
+                        disabled={loadingLink}
+                        className="gap-1.5"
+                        title="View Telegram Onboarding Link & QR Code"
+                      >
+                        <QrCode className="h-3.5 w-3.5 text-sky-500" />
+                        Telegram Link
+                      </Button>
+
                       {isMentorActive ? (
                         <Button
                           variant="outline"
@@ -362,6 +435,86 @@ export default function AdminMentors() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Mentor Telegram Onboarding Modal */}
+      <Dialog open={!!onboardingData} onOpenChange={(open) => !open && setOnboardingData(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-xl">
+              <Send className="w-5 h-5 text-sky-500" />
+              Mentor Telegram Onboarding
+            </DialogTitle>
+            <DialogDescription>
+              Share this link or scan the QR code with <b>{onboardingData?.mentorName}</b> to link their Telegram account for direct task alerts.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex flex-col items-center justify-center space-y-4 py-2">
+            {/* Scannable QR Code */}
+            <div className="p-3 bg-white rounded-xl shadow-md border border-border flex items-center justify-center">
+              {onboardingData?.deepLink ? (
+                <img
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(onboardingData.deepLink)}`}
+                  alt="Telegram Onboarding QR Code"
+                  className="w-48 h-48 object-contain rounded-lg"
+                />
+              ) : (
+                <div className="w-48 h-48 flex items-center justify-center text-muted-foreground text-xs">
+                  Generating QR Code...
+                </div>
+              )}
+            </div>
+
+            {/* Status indicator */}
+            <div className="flex items-center gap-2 text-xs">
+              {onboardingData?.isLinked ? (
+                <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 gap-1.5 py-1 px-3">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                  Account Connected {onboardingData.telegramId ? `(ID: ${onboardingData.telegramId})` : ""}
+                </Badge>
+              ) : (
+                <Badge variant="outline" className="text-amber-500 border-amber-500/30 gap-1.5 py-1 px-3">
+                  <RefreshCw className="w-3 h-3 animate-spin" />
+                  Waiting for mentor to tap Start...
+                </Badge>
+              )}
+            </div>
+
+            {/* Direct Deep Link input & copy button */}
+            <div className="w-full space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">Direct Telegram Deep Link</label>
+              <div className="flex gap-2">
+                <Input
+                  readOnly
+                  value={onboardingData?.deepLink || ""}
+                  className="text-xs font-mono bg-muted/40"
+                />
+                <Button size="sm" onClick={handleCopyLink} className="shrink-0 gap-1.5">
+                  {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                  {copied ? "Copied" : "Copy"}
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="flex sm:justify-between items-center gap-2">
+            {onboardingData?.deepLink && (
+              <a
+                href={onboardingData.deepLink}
+                target="_blank"
+                rel="noreferrer"
+                className="text-xs text-primary hover:underline flex items-center gap-1"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+                Open in Telegram
+              </a>
+            )}
+            <Button variant="outline" onClick={() => setOnboardingData(null)}>
+              Done
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 }

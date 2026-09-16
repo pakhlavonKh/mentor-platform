@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { api, type LearningContent, type Pagination } from "@/lib/api";
 import { toast } from "sonner";
 import { Trash2, Edit2 } from "lucide-react";
@@ -152,11 +153,19 @@ export default function AdminLearning() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium mb-2">Type</label>
-                <select value={newContent.type} onChange={(e) => setNewContent({ ...newContent, type: e.target.value as any })} className="w-full rounded-md border px-3 py-2">
-                  <option value="video">Video</option>
-                  <option value="text">Text</option>
-                  <option value="checklist">Checklist</option>
-                </select>
+                <Select
+                  value={newContent.type}
+                  onValueChange={(value) => setNewContent({ ...newContent, type: value as any })}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="video">Video</SelectItem>
+                    <SelectItem value="text">Text</SelectItem>
+                    <SelectItem value="checklist">Checklist</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2">Duration</label>
@@ -178,11 +187,19 @@ export default function AdminLearning() {
                 {editingId === content.id ? (
                   <div className="space-y-4">
                     <Input value={editContent.title.en} onChange={(e) => setEditContent({ ...editContent, title: { ...editContent.title, en: e.target.value } })} placeholder="Title EN" />
-                    <select value={editContent.type} onChange={(e) => setEditContent({ ...editContent, type: e.target.value })} className="w-full rounded-md border px-3 py-2">
-                      <option value="video">Video</option>
-                      <option value="text">Text</option>
-                      <option value="checklist">Checklist</option>
-                    </select>
+                    <Select
+                      value={editContent.type}
+                      onValueChange={(value) => setEditContent({ ...editContent, type: value as any })}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="video">Video</SelectItem>
+                        <SelectItem value="text">Text</SelectItem>
+                        <SelectItem value="checklist">Checklist</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <Input value={editContent.duration} onChange={(e) => setEditContent({ ...editContent, duration: e.target.value })} placeholder="Duration" />
                     <div className="flex gap-2">
                       <Button onClick={() => updateMutation.mutate({ id: content.id, data: editContent })} className="gradient-primary" disabled={updateMutation.isPending}>

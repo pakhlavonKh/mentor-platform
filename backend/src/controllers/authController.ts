@@ -35,6 +35,7 @@ export const register = async (req: Request, res: Response) => {
       firstName,
       lastName,
       role: userRole,
+      consentedAt: new Date(),
     });
 
     const savedUser = await userRepository.save(user);
@@ -75,6 +76,10 @@ export const login = async (req: Request, res: Response) => {
 
     if (!isPasswordValid) {
       return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    if (user.isActive === false) {
+      return res.status(403).json({ message: "Account has been deactivated. Please contact support." });
     }
 
     const token = generateToken(user.id);
@@ -231,6 +236,10 @@ export const googleOauth = async (req: Request, res: Response) => {
     const picture = payload.picture || null;
 
     let user = await userRepository.findOne({ where: { email } });
+    if (user && user.isActive === false) {
+      return res.status(403).json({ message: "Account has been deactivated. Please contact support." });
+    }
+
     if (!user) {
       user = userRepository.create({
         email,

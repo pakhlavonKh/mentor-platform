@@ -1,3 +1,5 @@
+import "dotenv/config";
+
 const isProduction = process.env.NODE_ENV === "production";
 
 export function getEnv(name: string, fallback?: string): string | undefined {
@@ -37,6 +39,7 @@ export const config = {
     user: getRequiredEnv("DB_USER", "postgres"),
     password: getRequiredEnv("DB_PASSWORD", "password"),
     name: getRequiredEnv("DB_NAME", "yerkenaz"),
+    ssl: getEnv("DB_SSL") === "true",
   },
   jwt: {
     secret: getRequiredEnv("JWT_SECRET", "dev-jwt-secret"),
@@ -57,7 +60,7 @@ export const config = {
     channelUrl: getEnv("TELEGRAM_CHANNEL_URL", "https://t.me/studyqadam_corporate")!,
     channelUsername: getEnv("TELEGRAM_CHANNEL_USERNAME", "@studyqadam_corporate")!,
     botToken: getEnv("TELEGRAM_BOT_TOKEN"),
-    managementChatId: getEnv("TELEGRAM_MANAGEMENT_CHAT_ID"),
+    botUsername: getEnv("TELEGRAM_BOT_USERNAME", "studyqadam_bot")!,
   },
   upload: {
     dir: getEnv("UPLOAD_DIR", "uploads/submissions")!,

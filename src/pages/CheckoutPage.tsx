@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { AppLayout } from "@/components/AppLayout";
+import { PageLayout } from "@/components/PageLayout";
 import { api, type PricingPlan } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { PricingCard } from "@/components/PricingCard";
@@ -27,7 +27,7 @@ export default function CheckoutPage() {
   };
 
   return (
-    <AppLayout>
+    <PageLayout>
       <div className="max-w-4xl mx-auto space-y-6">
         <h1 className="font-display text-2xl font-bold">Purchase Review Package</h1>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -39,6 +39,6 @@ export default function CheckoutPage() {
           ))}
         </div>
       </div>
-    </AppLayout>
+    </PageLayout>
   );
 }

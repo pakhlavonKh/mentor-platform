@@ -8,6 +8,7 @@ import { User } from "../entities/User.js";
 import { Submission } from "../entities/Submission.js";
 import { Order } from "../entities/Order.js";
 import { CalendarEvent } from "../entities/CalendarEvent.js";
+import { TelegramChat } from "../entities/TelegramChat.js";
 import { config } from "./env.js";
 
 export const AppDataSource = new DataSource({
@@ -17,8 +18,8 @@ export const AppDataSource = new DataSource({
   username: config.db.user,
   password: config.db.password,
   database: config.db.name,
-  entities: [Grant, LearningContent, TelegramPost, PricingPlan, User, Submission, Order, CalendarEvent],
+  entities: [Grant, LearningContent, TelegramPost, PricingPlan, User, Submission, Order, CalendarEvent, TelegramChat],
   synchronize: !config.isProduction,
-  logging: !config.isProduction,
-  ssl: config.isProduction,
+  ssl: config.db.ssl ? { rejectUnauthorized: false } : false,
 });
+

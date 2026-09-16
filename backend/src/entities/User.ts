@@ -28,11 +28,17 @@ export class User {
   @Column({ type: "varchar", nullable: true })
   telegramId?: string | null;
 
+  @Column({ type: "varchar", nullable: true, unique: true })
+  telegramLinkToken?: string | null;
+
   @Column({ type: "boolean", default: true })
   isActive!: boolean;
 
   @Column({ type: "text", nullable: true })
   profilePicture?: string | null;
+
+  @Column({ type: "timestamp", nullable: true })
+  consentedAt?: Date | null;
 
   @ManyToMany(() => Grant, { eager: false })
   @JoinTable({ name: "user_saved_grants" })
