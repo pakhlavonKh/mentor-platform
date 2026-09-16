@@ -87,7 +87,7 @@ export function PricingCard({ plan, onSelect, loading: externalLoading }: Pricin
         <Button
           onClick={handleStart}
           disabled={isLoading}
-          className={`w-full ${plan.popular ? "gradient-primary text-primary-foreground hover:opacity-90" : ""}`}
+          className={`w-full rounded-full ${plan.popular ? "gradient-primary text-primary-foreground hover:opacity-90" : ""}`}
           variant={plan.popular ? "default" : "outline"}
         >
           {isLoading ? (
