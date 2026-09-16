@@ -7,6 +7,7 @@ import {
   updateSubmissionStatus,
   addFeedback,
   assignReviewer,
+  assignStudentSubmissions,
   claimSubmission,
   unclaimSubmission,
   getPoolSubmissions,
@@ -33,6 +34,7 @@ router.post("/:id/claim", authenticate, authorizeRole("admin", "mentor", "tutor"
 router.post("/:id/unclaim", authenticate, authorizeRole("admin", "mentor", "tutor"), unclaimSubmission);
 router.post("/:id/feedback", authenticate, authorizeRole("admin", "mentor", "tutor"), upload.array("feedbackFiles", 5), addFeedback);
 router.put("/:id/status", authenticate, authorizeRole("admin", "mentor", "tutor"), updateSubmissionStatus);
+router.put("/assign-student", authenticate, authorizeRole("admin"), assignStudentSubmissions);
 router.put("/:id/assign", authenticate, authorizeRole("admin"), assignReviewer);
 
 // Single submission details

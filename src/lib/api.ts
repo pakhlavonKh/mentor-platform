@@ -159,6 +159,10 @@ export const api = {
       const qs = params ? "?" + new URLSearchParams(params).toString() : "";
       return request<{ data: Submission[]; pagination: Pagination }>(`/submissions/all${qs}`);
     },
+    assign: (id: string, reviewerId: string | null) =>
+      request<Submission>(`/submissions/${id}/assign`, { method: "PUT", body: JSON.stringify({ reviewerId }) }),
+    assignStudent: (studentId: string, reviewerId: string | null) =>
+      request<{ message: string }>(`/submissions/assign-student`, { method: "PUT", body: JSON.stringify({ studentId, reviewerId }) }),
   },
 
   // ---------- Admin users ----------

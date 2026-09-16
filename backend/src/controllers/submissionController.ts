@@ -334,7 +334,11 @@ export const assignReviewer = async (req: Request, res: Response) => {
     const { id } = req.params;
     const { reviewerId } = req.body;
 
-    if (!reviewerId) return res.status(400).json({ message: "reviewerId required" });
+    if (!reviewerId || reviewerId === "unassigned") {
+      await submissionRepository.update(id, { reviewerId: null, status: "pending" } as any);
+      const updated = await submissionRepository.findOne({ where: { id }, relations: ["user", "reviewer"] });
+      return res.json(updated ? sanitizeSubmission(updated) : null);
+    }
 
     await submissionRepository.update(id, { reviewerId, status: "in_review" } as Partial<Submission>);
     const updated = await submissionRepository.findOne({ where: { id }, relations: ["user", "reviewer"] });
@@ -370,6 +374,55 @@ export const assignReviewer = async (req: Request, res: Response) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Error assigning reviewer", error: errorMessage(error) });
+  }
+};
+
+export const assignStudentSubmissions = async (req: Request, res: Response) => {
+  try {
+    const { studentId, reviewerId } = req.body;
+    if (!studentId) return res.status(400).json({ message: "studentId required" });
+
+    const newReviewerId = (!reviewerId || reviewerId === "unassigned") ? null : reviewerId;
+    const newStatus = newReviewerId ? "in_review" : "pending";
+
+    await submissionRepository
+      .createQueryBuilder()
+      .update(Submission)
+      .set({ reviewerId: newReviewerId, status: newStatus } as any)
+      .where("userId = :studentId AND status IN (:...statuses)", {
+        studentId,
+        statuses: ["pending", "in_review"],
+      })
+      .execute();
+
+    if (newReviewerId) {
+      const reviewer = await userRepository.findOne({ where: { id: newReviewerId } });
+      const student = await userRepository.findOne({ where: { id: studentId } });
+      const studentName = student ? `${student.firstName} ${student.lastName}` : "Student";
+      const mentorName = reviewer ? `${reviewer.firstName} ${reviewer.lastName}` : "Mentor";
+
+      if (reviewer?.telegramId) {
+        notifyUser(
+          reviewer.telegramId,
+          `🔔 <b>Student Submissions Assigned to You!</b>\n\n` +
+          `• <b>Student:</b> ${studentName}\n` +
+          `• <b>Action:</b> All active submissions assigned\n` +
+          `<i>Check your mentor portal:</i> <a href="${config.frontendUrl}/mentor">Open Mentor Dashboard</a>`
+        ).catch(() => {});
+      }
+
+      notifyManagement(
+        `📋 <b>Student Assigned to Mentor</b>\n\n` +
+        `• <b>Student:</b> ${studentName}\n` +
+        `• <b>Assigned Mentor:</b> ${mentorName}\n` +
+        `• <b>Time:</b> ${new Date().toLocaleTimeString()}`
+      ).catch(() => {});
+    }
+
+    res.json({ message: "Student submissions updated successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error assigning student submissions", error: errorMessage(error) });
   }
 };
 

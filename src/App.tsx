@@ -29,6 +29,7 @@ const AdminOrders = lazy(() => import("./pages/AdminOrders"));
 const MentorDashboard = lazy(() => import("./pages/MentorDashboard"));
 const AdminUsers = lazy(() => import("./pages/AdminUsers"));
 const AdminMentors = lazy(() => import("./pages/AdminMentors"));
+const AdminSubmissions = lazy(() => import("./pages/AdminSubmissions"));
 const CheckoutPage = lazy(() => import("./pages/CheckoutPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const AdminCalendar = lazy(() => import("./pages/AdminCalendar"));
@@ -84,7 +85,7 @@ function AppContent() {
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/admin/users" element={isLoggedIn && user?.role === "admin" ? <AdminUsers /> : <Navigate to="/login" replace />} />
             <Route path="/admin/mentors" element={isLoggedIn && user?.role === "admin" ? <AdminMentors /> : <Navigate to="/login" replace />} />
-            {/* Submissions removed from Admin/Mentor panels per policy */}
+            <Route path="/admin/submissions" element={isLoggedIn && user?.role === "admin" ? <AdminSubmissions /> : <Navigate to="/login" replace />} />
             <Route path="/admin/pricing" element={isLoggedIn && user?.role === "admin" ? <AdminPricing /> : <Navigate to="/login" replace />} />
             <Route path="/admin/telegram" element={isLoggedIn && user?.role === "admin" ? <AdminTelegram /> : <Navigate to="/login" replace />} />
             <Route path="/admin/learning" element={isLoggedIn && user?.role === "admin" ? <AdminLearning /> : <Navigate to="/login" replace />} />

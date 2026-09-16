@@ -9,6 +9,7 @@ import {
   CalendarDays,
   LayoutDashboard,
   LogOut,
+  FileCheck,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { Link, useLocation } from "react-router-dom";
@@ -119,6 +120,20 @@ export function AppSidebar() {
                     >
                       <GraduationCap className="mr-2 h-4 w-4" />
                       {!collapsed && <span>{t("admin.mentors")}</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={isActive("/admin/submissions")}>
+                    <NavLink
+                      to="/admin/submissions"
+                      end
+                      className="hover:bg-sidebar-accent/50"
+                      activeClassName="bg-sidebar-accent text-sidebar-primary font-medium"
+                    >
+                      <FileCheck className="mr-2 h-4 w-4" />
+                      {!collapsed && <span>{t("admin.submissions")}</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
