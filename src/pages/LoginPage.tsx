@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -14,11 +14,16 @@ import { Logo } from "@/components/Logo";
 export default function LoginPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
   const { login, user } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  const searchParams = new URLSearchParams(location.search);
+  const redirect = searchParams.get("redirect");
+  const planId = searchParams.get("planId");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,10 +32,14 @@ export default function LoginPage() {
     try {
       await login(email, password);
       toast.success(t("auth.loginSuccess"));
-      const role = (user && user.role) || localStorage.getItem("userData") ? JSON.parse(localStorage.getItem("userData") || "null")?.role : null;
+      const role = (user && user.role) || (localStorage.getItem("userData") ? JSON.parse(localStorage.getItem("userData") || "null")?.role : null);
       if (role === "admin") navigate("/admin");
       else if (role === "mentor" || role === "tutor") navigate("/mentor");
-      else navigate("/");
+      else if (redirect) {
+        navigate(`${redirect}${planId ? `?planId=${encodeURIComponent(planId)}&newOrder=true` : ""}`);
+      } else {
+        navigate("/");
+      }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : t("auth.loginError"));
     } finally {
@@ -58,7 +67,7 @@ export default function LoginPage() {
             </h1>
             <p className="text-xs sm:text-sm text-muted-foreground">
               {t("auth.dontHaveAccount")}{" "}
-              <Link to="/signup" className="text-primary hover:underline font-medium">
+              <Link to={`/signup${location.search}`} className="text-primary hover:underline font-medium">
                 {t("auth.registerNow")}
               </Link>
             </p>

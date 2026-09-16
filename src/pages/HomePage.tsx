@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { PageLayout } from "@/components/PageLayout";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import { useLocale } from "@/hooks/use-locale";
 import { Search, GraduationCap, FileText, Globe, ArrowRight, CheckCircle2, Star, Users, BookOpen } from "lucide-react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/context/AuthContext";
+import { toast } from "sonner";
 import heroImage from "@/assets/hero-image.jpg";
 
 const fadeUp = {
@@ -21,10 +22,34 @@ const fadeUp = {
 
 export default function HomePage() {
   const { t } = useTranslation();
-  const { isLoggedIn } = useAuth();
+  const { user, isLoggedIn } = useAuth();
+  const navigate = useNavigate();
   const [grants, setGrants] = useState<Grant[]>([]);
   const [pricingPlans, setPricingPlans] = useState<PricingPlan[]>([]);
   const { lt } = useLocale();
+
+  const handlePlanSelect = async (plan: PricingPlan) => {
+    if (!isLoggedIn) {
+      toast.info(t("pricing.loginRequired") || "Войдите или зарегистрируйтесь, чтобы продолжить выбор тарифа");
+      navigate(`/login?redirect=/profile&planId=${encodeURIComponent(plan.id)}`);
+      return;
+    }
+    if (user?.role && user.role !== "student") {
+      toast.error("Покупка пакетов доступна только для аккаунтов студентов");
+      return;
+    }
+    try {
+      const order = await api.orders.create({
+        pricingPlanId: plan.id,
+        price: plan.price,
+        documents: plan.documents,
+      });
+      toast.success(t("pricing.orderCreated") || "Заказ создан! Переходим к оплате...");
+      navigate(`/profile?orderId=${encodeURIComponent(order.id)}&newOrder=true`);
+    } catch (err: any) {
+      toast.error(err.message || "Ошибка при создании заказа");
+    }
+  };
 
   useEffect(() => {
     api.grants.list({ limit: "4" }).then((res) => setGrants(res.data)).catch(() => {});
@@ -186,11 +211,15 @@ export default function HomePage() {
                       </div>
                       <p className="text-sm text-muted-foreground">{t("grantsFilter.documentsReviewed", { count: plan.documents })}</p>
                     </div>
-                    <Link to="/pricing" className="block mt-auto pt-2">
-                      <Button className={`w-full rounded-full ${plan.popular ? "gradient-primary text-primary-foreground hover:opacity-90" : ""}`} variant={plan.popular ? "default" : "outline"}>
+                    <div className="block mt-auto pt-2">
+                      <Button
+                        onClick={() => handlePlanSelect(plan)}
+                        className={`w-full rounded-full ${plan.popular ? "gradient-primary text-primary-foreground hover:opacity-90" : ""}`}
+                        variant={plan.popular ? "default" : "outline"}
+                      >
                         {t("common.getStarted")}
                       </Button>
-                    </Link>
+                    </div>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -205,9 +234,11 @@ export default function HomePage() {
           <h2 className="font-display text-3xl lg:text-4xl font-bold text-foreground">{t("home.cta")}</h2>
           <p className="text-muted-foreground text-lg">{t("home.ctaDesc")}</p>
           <div className="flex justify-center gap-3">
-            <Button className="gradient-primary text-primary-foreground rounded-full px-8 py-5 text-base hover:opacity-90">
-              {t("common.getStarted")}
-            </Button>
+            <Link to="/pricing">
+              <Button className="gradient-primary text-primary-foreground rounded-full px-8 py-5 text-base hover:opacity-90">
+                {t("common.getStarted")}
+              </Button>
+            </Link>
             {isLoggedIn && (
               <Link to="/learn">
                 <Button variant="outline" className="rounded-full px-8 py-5 text-base">

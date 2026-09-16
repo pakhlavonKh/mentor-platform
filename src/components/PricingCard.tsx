@@ -1,18 +1,64 @@
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check } from "lucide-react";
-import type { PricingPlan } from "@/lib/api";
+import { Check, Loader2 } from "lucide-react";
+import { api, type PricingPlan } from "@/lib/api";
 import { useLocale } from "@/hooks/use-locale";
+import { useAuth } from "@/context/AuthContext";
+import { toast } from "sonner";
 
 interface PricingCardProps {
   plan: PricingPlan;
+  onSelect?: (plan: PricingPlan) => void;
+  loading?: boolean;
 }
 
-export function PricingCard({ plan }: PricingCardProps) {
+export function PricingCard({ plan, onSelect, loading: externalLoading }: PricingCardProps) {
   const { t } = useTranslation();
   const { lt, la } = useLocale();
+  const { user, isLoggedIn } = useAuth();
+  const navigate = useNavigate();
+  const [internalLoading, setInternalLoading] = useState(false);
+
+  const isLoading = externalLoading || internalLoading;
+
+  const handleStart = async () => {
+    if (onSelect) {
+      onSelect(plan);
+      return;
+    }
+
+    // If not logged in, redirect to login with return path
+    if (!isLoggedIn) {
+      toast.info(t("pricing.loginRequired") || "Войдите или зарегистрируйтесь, чтобы продолжить выбор тарифа");
+      navigate(`/login?redirect=/profile&planId=${encodeURIComponent(plan.id)}`);
+      return;
+    }
+
+    if (user?.role && user.role !== "student") {
+      toast.error("Покупка пакетов доступна только для аккаунтов студентов");
+      return;
+    }
+
+    setInternalLoading(true);
+    try {
+      const order = await api.orders.create({
+        pricingPlanId: plan.id,
+        price: plan.price,
+        documents: plan.documents,
+      });
+      toast.success(t("pricing.orderCreated") || "Заказ создан! Переходим к оплате...");
+      navigate(`/profile?orderId=${encodeURIComponent(order.id)}&newOrder=true`);
+    } catch (err: any) {
+      toast.error(err.message || "Ошибка при создании заказа");
+    } finally {
+      setInternalLoading(false);
+    }
+  };
+
   return (
     <Card className={`relative shadow-soft hover:shadow-hover transition-all duration-300 border rounded-2xl h-full flex flex-col ${plan.popular ? "border-primary shadow-elevated ring-1 ring-primary/20" : "border-border/60"}`}>
       {plan.popular && (
@@ -38,10 +84,23 @@ export function PricingCard({ plan }: PricingCardProps) {
         </ul>
       </CardContent>
       <CardFooter className="pt-2 mt-auto">
-        <Button className={`w-full ${plan.popular ? "gradient-primary text-primary-foreground hover:opacity-90" : ""}`} variant={plan.popular ? "default" : "outline"}>
-          {t("pricing.getStarted")}
+        <Button
+          onClick={handleStart}
+          disabled={isLoading}
+          className={`w-full ${plan.popular ? "gradient-primary text-primary-foreground hover:opacity-90" : ""}`}
+          variant={plan.popular ? "default" : "outline"}
+        >
+          {isLoading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              {t("common.loading") || "Загрузка..."}
+            </>
+          ) : (
+            t("pricing.getStarted")
+          )}
         </Button>
       </CardFooter>
     </Card>
   );
 }
+

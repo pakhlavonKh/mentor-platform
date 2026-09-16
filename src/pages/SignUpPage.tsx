@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ import { Logo } from "@/components/Logo";
 export default function SignUpPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
   const { signup } = useAuth();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -25,6 +26,10 @@ export default function SignUpPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreeLegal, setAgreeLegal] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  const searchParams = new URLSearchParams(location.search);
+  const redirect = searchParams.get("redirect");
+  const planId = searchParams.get("planId");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,7 +49,11 @@ export default function SignUpPage() {
     try {
       await signup(email, password, firstName, lastName);
       toast.success(t("auth.registrationSuccess"));
-      navigate("/");
+      if (redirect) {
+        navigate(`${redirect}${planId ? `?planId=${encodeURIComponent(planId)}&newOrder=true` : ""}`);
+      } else {
+        navigate("/");
+      }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : t("auth.registrationError"));
     } finally {
@@ -71,7 +80,7 @@ export default function SignUpPage() {
             </h1>
             <p className="text-muted-foreground">
               {t("auth.alreadyHaveAccount")}{" "}
-              <Link to="/login" className="text-primary hover:underline font-medium">
+              <Link to={`/login${location.search}`} className="text-primary hover:underline font-medium">
                 {t("auth.loginNow")}
               </Link>
             </p>

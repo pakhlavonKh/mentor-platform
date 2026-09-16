@@ -46,9 +46,17 @@ export function GoogleAuthButton({ text = "continue_with", className = "w-full" 
           const stored = localStorage.getItem("userData");
           const role = stored ? JSON.parse(stored)?.role : user?.role;
 
+          const searchParams = new URLSearchParams(window.location.search);
+          const redirect = searchParams.get("redirect");
+          const planId = searchParams.get("planId");
+
           if (role === "admin") navigate("/admin");
           else if (role === "mentor" || role === "tutor") navigate("/mentor");
-          else navigate("/");
+          else if (redirect) {
+            navigate(`${redirect}${planId ? `?planId=${encodeURIComponent(planId)}&newOrder=true` : ""}`);
+          } else {
+            navigate("/");
+          }
         }
       } catch (err: any) {
         toast.error(err.message || "Google authentication failed. Please try again.");

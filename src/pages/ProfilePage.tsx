@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import type { AuthResponse } from "@/lib/api";
@@ -12,12 +12,13 @@ import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { User, Mail, BookOpen, Bookmark, FileCheck, CreditCard, Clock, CheckCircle2, LogOut, ArrowRight, Camera, Star } from "lucide-react";
-import { api, type LearningContent, type Grant, type Submission, type Order, downloadAuthenticatedFile } from "@/lib/api";
+import { User, Mail, BookOpen, Bookmark, FileCheck, CreditCard, Clock, CheckCircle2, LogOut, ArrowRight, Camera, Star, Send, ExternalLink, AlertCircle, Sparkles } from "lucide-react";
+import { api, type LearningContent, type Grant, type Submission, type Order, type PricingPlan, downloadAuthenticatedFile } from "@/lib/api";
 import { useLocale } from "@/hooks/use-locale";
 import { GrantCard } from "@/components/GrantCard";
 import { DashboardCalendar } from "@/components/DashboardCalendar";
 import { ProfileCalendar } from "@/components/ProfileCalendar";
+import { getTelegramPaymentUrl } from "@/lib/telegramPayment";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import useSavedGrants from "@/hooks/use-saved-grants";
@@ -27,14 +28,22 @@ export default function ProfilePage() {
   const { user, isLoggedIn, logout, updateProfile } = useAuth();
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
   const [learning, setLearning] = useState<LearningContent[]>([]);
   const [grants, setGrants] = useState<Grant[]>([]);
+  const [pricingPlans, setPricingPlans] = useState<PricingPlan[]>([]);
   const { lt } = useLocale();
   const { savedIds, toggleSave } = useSavedGrants();
+
+  const searchParams = new URLSearchParams(location.search);
+  const planIdFromQuery = searchParams.get("planId");
+  const orderIdFromQuery = searchParams.get("orderId");
+  const isNewOrder = searchParams.get("newOrder") === "true";
 
   useEffect(() => {
     api.learning.list({ limit: "100" }).then((res) => setLearning(res.data)).catch(() => {});
     api.grants.list({ limit: "100" }).then((res) => setGrants(res.data)).catch(() => {});
+    api.pricing.list().then(setPricingPlans).catch(() => {});
   }, []);
 
   const completed = learning.filter((l) => l.completed).length;
@@ -61,6 +70,37 @@ export default function ProfilePage() {
     api.submissions.list().then((res) => setSubmissions(res.data)).catch(() => {});
     api.orders.list().then((res) => setOrders(res.data)).catch(() => {});
   }, [isLoggedIn, navigate, user?.role]);
+
+  // Automatically create pending order if redirected from tariff selection
+  useEffect(() => {
+    if (!planIdFromQuery || !isLoggedIn) return;
+
+    let active = true;
+    (async () => {
+      try {
+        const plans = await api.pricing.list();
+        const targetPlan = plans.find((p) => p.id === planIdFromQuery);
+        if (targetPlan && active) {
+          const created = await api.orders.create({
+            pricingPlanId: targetPlan.id,
+            price: targetPlan.price,
+            documents: targetPlan.documents,
+          });
+          if (active) {
+            setOrders((prev) => [created, ...prev.filter((o) => o.id !== created.id)]);
+            toast.success("Заказ тарифа успешно оформлен! Завершите перевод через Telegram.");
+            navigate(`/profile?orderId=${encodeURIComponent(created.id)}&newOrder=true`, { replace: true });
+          }
+        }
+      } catch (err: any) {
+        toast.error(err.message || "Ошибка создания заказа");
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, [planIdFromQuery, isLoggedIn, navigate]);
 
   // initialize edit state from user (safe defaults if user is not yet loaded)
   const [editing, setEditing] = useState(false);
@@ -124,6 +164,22 @@ export default function ProfilePage() {
       }
     }
   };
+
+  const getPlanName = (pricingPlanId: string) => {
+    const p = pricingPlans.find((plan) => plan.id === pricingPlanId);
+    return p ? lt(p.name) : "Тариф StudyQadam";
+  };
+
+  const completedOrders = orders.filter((o) => o.status === "completed");
+  const pendingOrders = orders.filter((o) => o.status === "pending");
+  const activeOrderToPay = orderIdFromQuery
+    ? orders.find((o) => o.id === orderIdFromQuery && o.status === "pending") || pendingOrders[0]
+    : pendingOrders[0];
+
+  const totalReviewsAllowed = completedOrders.reduce((sum, o) => sum + (o.documents || 0), 0);
+  const reviewsUsed = submissions.length;
+  const reviewsRemaining = Math.max(0, totalReviewsAllowed - reviewsUsed);
+  const hasActivePlan = totalReviewsAllowed > 0;
 
   return (
     <PageLayout>
@@ -203,6 +259,71 @@ export default function ProfilePage() {
             </CardContent>
           </Card>
         </motion.div>
+
+        {/* Pending Order Payment Callout */}
+        {activeOrderToPay && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="relative overflow-hidden rounded-2xl border-2 border-primary/30 bg-card shadow-elevated p-6 sm:p-7"
+          >
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+              <div className="space-y-2.5 flex-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Badge className="bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30 text-xs font-semibold px-3 py-1">
+                    ⏳ Ожидает оплаты (денежный перевод)
+                  </Badge>
+                  {isNewOrder && (
+                    <Badge className="gradient-primary text-primary-foreground text-xs font-semibold px-3 py-1">
+                      Новый заказ
+                    </Badge>
+                  )}
+                  <span className="text-xs text-muted-foreground font-mono">
+                    #{activeOrderToPay.id.slice(0, 8)}
+                  </span>
+                </div>
+                <h3 className="font-display text-xl sm:text-2xl font-bold text-foreground">
+                  Тариф «{getPlanName(activeOrderToPay.pricingPlanId)}»
+                </h3>
+                <p className="text-sm text-muted-foreground leading-relaxed max-w-2xl">
+                  Для оплаты перейдите в наш официальный Telegram. Сообщение с деталями вашего заказа уже сформировано. Отправьте его нашему менеджеру и сделайте перевод — после этого администратор сразу активирует ваш тариф на платформе.
+                </p>
+                <div className="flex flex-wrap items-center gap-3 pt-1 text-xs sm:text-sm">
+                  <span className="flex items-center gap-1.5 bg-secondary/70 px-3 py-1.5 rounded-lg border border-border/70 text-foreground font-medium">
+                    <CreditCard className="h-4 w-4 text-primary" /> К оплате: <strong className="text-primary font-bold">${activeOrderToPay.price}</strong>
+                  </span>
+                  <span className="flex items-center gap-1.5 bg-secondary/70 px-3 py-1.5 rounded-lg border border-border/70 text-foreground font-medium">
+                    <FileCheck className="h-4 w-4 text-primary" /> Включено проверок: <strong>{activeOrderToPay.documents}</strong>
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row md:flex-col gap-2 w-full md:w-auto shrink-0">
+                <a
+                  href={getTelegramPaymentUrl({
+                    orderId: activeOrderToPay.id,
+                    planName: getPlanName(activeOrderToPay.pricingPlanId),
+                    price: activeOrderToPay.price,
+                    documents: activeOrderToPay.documents,
+                    user,
+                  })}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full"
+                >
+                  <Button
+                    size="lg"
+                    className="w-full bg-[#229ED9] hover:bg-[#1E88C7] text-white font-semibold rounded-xl shadow-md gap-2.5 px-6 py-6 text-base transition-all hover:scale-[1.02]"
+                  >
+                    <Send className="h-5 w-5 fill-white" />
+                    Оплатить через Telegram
+                  </Button>
+                </a>
+              </div>
+            </div>
+          </motion.div>
+        )}
 
         {/* Stats */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
@@ -306,6 +427,39 @@ export default function ProfilePage() {
               </div>
             </CardHeader>
             <CardContent className="space-y-6">
+              {/* Active Package Quota / Notice */}
+              <div className="p-3.5 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs sm:text-sm bg-muted/20">
+                {hasActivePlan ? (
+                  <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-400 font-medium">
+                    <CheckCircle2 className="h-4 w-4 shrink-0" />
+                    <span>
+                      Активный тариф • Доступно проверок ментором: <strong>{reviewsRemaining}</strong> (использовано {reviewsUsed} из {totalReviewsAllowed})
+                    </span>
+                  </div>
+                ) : pendingOrders.length > 0 ? (
+                  <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400 font-medium">
+                    <Clock className="h-4 w-4 shrink-0" />
+                    <span>
+                      Заказ тарифа ожидает подтверждения оплаты в Telegram. После активации администратором вам станут доступны проверки.
+                    </span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 text-muted-foreground font-medium">
+                    <AlertCircle className="h-4 w-4 text-primary shrink-0" />
+                    <span>
+                      Для проверки документов менторами выберите подходящий тариф.
+                    </span>
+                  </div>
+                )}
+
+                <Link to="/pricing" className="shrink-0">
+                  <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5 rounded-lg">
+                    <Sparkles className="h-3.5 w-3.5 text-primary" />
+                    Все тарифы
+                  </Button>
+                </Link>
+              </div>
+
               {/* Modern Upload Form */}
               <div className="p-5 bg-muted/30 border border-border/60 rounded-xl space-y-4">
                 <div className="flex items-center gap-2">
@@ -556,20 +710,63 @@ export default function ProfilePage() {
               <Separator />
               <div>
                 <h4 className="font-semibold text-sm text-foreground mb-3">Your Orders & Packages</h4>
-                <div className="space-y-2">
-                  {orders.map((o) => (
-                    <div key={o.id} className="p-3 border border-border/60 rounded-lg flex items-center justify-between text-xs">
-                      <div>
-                        <div className="font-semibold text-foreground">Package Order #{o.id.slice(0, 8)}</div>
-                        <div className="text-muted-foreground mt-0.5">
-                          Status: <span className="font-medium capitalize text-foreground">{o.status}</span> • {o.documents} Reviews Included • ${o.price}
+                <div className="space-y-2.5">
+                  {orders.map((o) => {
+                    const isPending = o.status === "pending";
+                    const isCompleted = o.status === "completed";
+                    const planTitle = getPlanName(o.pricingPlanId);
+                    const telegramUrl = getTelegramPaymentUrl({
+                      orderId: o.id,
+                      planName: planTitle,
+                      price: o.price,
+                      documents: o.documents,
+                      user,
+                    });
+
+                    return (
+                      <div key={o.id} className="p-4 border border-border/60 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs bg-card shadow-sm">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-semibold text-sm text-foreground">
+                              {planTitle}
+                            </span>
+                            <span className="text-muted-foreground font-mono">
+                              #{o.id.slice(0, 8)}
+                            </span>
+                          </div>
+                          <div className="text-muted-foreground">
+                            ${o.price} • {o.documents} {o.documents === 1 ? "проверка" : "проверок"} • {new Date(o.createdAt).toLocaleDateString()}
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2.5 shrink-0">
+                          {isPending && (
+                            <>
+                              <Badge className="bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30">
+                                Ожидает оплаты
+                              </Badge>
+                              <a href={telegramUrl} target="_blank" rel="noopener noreferrer">
+                                <Button size="sm" className="h-8 text-xs bg-[#229ED9] hover:bg-[#1E88C7] text-white gap-1.5 rounded-lg shadow-sm">
+                                  <Send className="h-3.5 w-3.5 fill-white" />
+                                  Оплатить в Telegram
+                                </Button>
+                              </a>
+                            </>
+                          )}
+                          {isCompleted && (
+                            <Badge className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30 font-medium">
+                              ✅ Тариф активирован
+                            </Badge>
+                          )}
+                          {!isPending && !isCompleted && (
+                            <Badge variant="outline" className="capitalize">
+                              {o.status}
+                            </Badge>
+                          )}
                         </div>
                       </div>
-                      <Badge variant="outline" className="capitalize text-xs font-normal">
-                        {o.status}
-                      </Badge>
-                    </div>
-                  ))}
+                    );
+                  })}
                   {orders.length === 0 && (
                     <p className="text-xs text-muted-foreground">No review packages purchased yet.</p>
                   )}

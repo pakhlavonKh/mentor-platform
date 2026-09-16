@@ -4,11 +4,13 @@ import { Order } from "../entities/Order.js";
 import { User } from "../entities/User.js";
 import { AuthRequest } from "../middleware/auth.js";
 import { sendMail } from "../utils/mailer.js";
+import { notifyManagement } from "../services/telegramService.js";
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const errorMessage = (error: unknown) => (error instanceof Error ? error.message : "Unexpected error");
 
 const orderRepository = AppDataSource.getRepository(Order);
+const userRepository = AppDataSource.getRepository(User);
 
 export const createOrder = async (req: Request, res: Response) => {
   try {
@@ -16,20 +18,39 @@ export const createOrder = async (req: Request, res: Response) => {
     const userId = authReq.userId;
     if (!userId) return res.status(401).json({ message: "Unauthorized" });
 
+    const currentUser = await userRepository.findOne({ where: { id: userId } });
     const { pricingPlanId, price, documents, submissionIds } = req.body;
-    const order = orderRepository.create({ userId, pricingPlanId, price: Number(price || 0), documents: Number(documents || 1), submissionIds: submissionIds || null, status: "pending" } as Partial<Order>);
+    const order = orderRepository.create({
+      userId,
+      pricingPlanId,
+      price: Number(price || 0),
+      documents: Number(documents || 1),
+      submissionIds: submissionIds || null,
+      status: "pending",
+    } as Partial<Order>);
     const saved = await orderRepository.save(order);
 
-    // notify user
+    // Notify management via Telegram bot
+    notifyManagement(
+      `💳 <b>New Order Created!</b>\n\n` +
+      `• <b>Order ID:</b> #${saved.id.slice(0, 8)}\n` +
+      `• <b>User:</b> ${currentUser?.firstName || "Student"} ${currentUser?.lastName || ""} (${currentUser?.email || "N/A"})\n` +
+      `• <b>Amount:</b> $${saved.price}\n` +
+      `• <b>Documents:</b> ${saved.documents}\n` +
+      `• <b>Status:</b> ⏳ Pending Payment (Telegram Transfer)\n` +
+      `• <b>Date:</b> ${new Date().toLocaleString()}`
+    ).catch((err) => console.error("Error dispatching order telegram alert:", err));
+
+    // notify user by email
     try {
-      if (saved.user?.email) {
-        await sendMail(saved.user.email, "Order created", `Your order ${saved.id} has been created and is pending payment.`);
+      if (currentUser?.email) {
+        await sendMail(currentUser.email, "Order created", `Your order ${saved.id} has been created and is pending payment.`);
       }
     } catch (err) {
       console.error("Failed to send order email", err);
     }
 
-    res.status(201).json(saved);
+    res.status(201).json({ ...saved, user: currentUser });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Error creating order", error: errorMessage(error) });
@@ -106,6 +127,15 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
 
     await orderRepository.update(id, { status } as Partial<Order>);
     const updated = await orderRepository.findOne({ where: { id } });
+
+    // Notify management via Telegram bot
+    notifyManagement(
+      `🔔 <b>Order Status Updated!</b>\n\n` +
+      `• <b>Order ID:</b> #${id.slice(0, 8)}\n` +
+      `• <b>New Status:</b> ${status === "completed" ? "✅ Completed / Tariff Activated" : status}\n` +
+      `• <b>User:</b> ${updated?.user?.firstName || "Student"} ${updated?.user?.lastName || ""} (${updated?.user?.email || "N/A"})\n` +
+      `• <b>Date:</b> ${new Date().toLocaleString()}`
+    ).catch((err) => console.error("Error dispatching order status telegram alert:", err));
 
     // notify user
     try {

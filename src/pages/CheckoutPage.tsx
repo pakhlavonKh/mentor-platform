@@ -16,10 +16,9 @@ export default function CheckoutPage() {
 
   const handleBuy = async (plan: PricingPlan) => {
     try {
-      // create order (payment integration later)
       const order = await api.orders.create({ pricingPlanId: plan.id, price: plan.price, documents: plan.documents });
-      toast.success("Order created");
-      navigate(`/profile`);
+      toast.success("Заказ создан! Переходим к оплате...");
+      navigate(`/profile?orderId=${encodeURIComponent(order.id)}&newOrder=true`);
     } catch (err) {
       const e = err as Error;
       toast.error(e.message || "Error creating order");
@@ -32,9 +31,8 @@ export default function CheckoutPage() {
         <h1 className="font-display text-2xl font-bold">Purchase Review Package</h1>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {plans.map((plan) => (
-            <div key={plan.id}>
-              <PricingCard plan={plan} />
-              <Button className="mt-3 w-full" onClick={() => handleBuy(plan)}>Buy</Button>
+            <div key={plan.id} className="h-full">
+              <PricingCard plan={plan} onSelect={handleBuy} />
             </div>
           ))}
         </div>
