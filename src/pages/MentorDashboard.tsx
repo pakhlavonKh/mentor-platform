@@ -74,22 +74,22 @@ export default function MentorDashboard() {
   const claimMutation = useMutation({
     mutationFn: (id: string) => api.submissions.claim(id),
     onSuccess: () => {
-      toast.success("Submission claimed successfully! It is now in your Active Reviews.");
+      toast.success(t("mentor.claimSuccess"));
       queryClient.invalidateQueries({ queryKey: ["mentor-pool-submissions"] });
       queryClient.invalidateQueries({ queryKey: ["mentor-my-submissions"] });
       setActiveTab("active");
     },
-    onError: (err: any) => toast.error(err.message || "Failed to claim submission"),
+    onError: (err: any) => toast.error(err.message || t("mentor.claimError")),
   });
 
   const unclaimMutation = useMutation({
     mutationFn: (id: string) => api.submissions.unclaim(id),
     onSuccess: () => {
-      toast.success("Submission released back to the general pool.");
+      toast.success(t("mentor.unclaimSuccess"));
       queryClient.invalidateQueries({ queryKey: ["mentor-pool-submissions"] });
       queryClient.invalidateQueries({ queryKey: ["mentor-my-submissions"] });
     },
-    onError: (err: any) => toast.error(err.message || "Failed to unclaim submission"),
+    onError: (err: any) => toast.error(err.message || t("mentor.unclaimError")),
   });
 
   const feedbackMutation = useMutation({
@@ -97,7 +97,7 @@ export default function MentorDashboard() {
       return api.submissions.addFeedback(id, form);
     },
     onSuccess: () => {
-      toast.success("Feedback submitted and student notified!");
+      toast.success(t("mentor.feedbackSuccess"));
       setReviewingSubmission(null);
       setFeedbackText("");
       setFeedbackFile(null);
@@ -105,7 +105,7 @@ export default function MentorDashboard() {
       queryClient.invalidateQueries({ queryKey: ["mentor-my-submissions"] });
       queryClient.invalidateQueries({ queryKey: ["mentor-pool-submissions"] });
     },
-    onError: (err: any) => toast.error(err.message || "Failed to submit feedback"),
+    onError: (err: any) => toast.error(err.message || t("mentor.feedbackError")),
   });
 
   const handleOpenReviewModal = (submission: Submission) => {
@@ -120,7 +120,7 @@ export default function MentorDashboard() {
     e.preventDefault();
     if (!reviewingSubmission) return;
     if (!feedbackText.trim()) {
-      toast.error("Please enter written feedback for the student.");
+      toast.error(t("mentor.feedbackRequired"));
       return;
     }
 
@@ -138,15 +138,15 @@ export default function MentorDashboard() {
   const getDocTypeLabel = (type?: string | null) => {
     switch (type) {
       case "motivation_letter":
-        return "Motivation Letter / SOP";
+        return t("mentor.docTypeMotivation");
       case "cv_resume":
-        return "CV / Resume";
+        return t("mentor.docTypeCv");
       case "recommendation_letter":
-        return "Recommendation Letter";
+        return t("mentor.docTypeRecommendation");
       case "research_proposal":
-        return "Research Proposal";
+        return t("mentor.docTypeResearch");
       default:
-        return type || "Application Document";
+        return type || t("mentor.docTypeGeneral");
     }
   };
 
@@ -181,13 +181,13 @@ export default function MentorDashboard() {
           <div className="relative z-10 space-y-2">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-xs font-medium tracking-wide">
               <Sparkles className="h-3.5 w-3.5 text-amber-300" />
-              <span>StudyQadam Mentor Portal</span>
+              <span>{t("mentor.portalBadge")}</span>
             </div>
             <h1 className="font-display text-2xl sm:text-3xl font-extrabold tracking-tight">
-              {t("mentor.welcome") || `Welcome, ${user?.firstName || "Mentor"}!`}
+              {t("mentor.welcome", { name: user?.firstName || "Mentor" })}
             </h1>
             <p className="text-primary-foreground/85 max-w-xl text-sm sm:text-base">
-              Review student application essays, evaluate CVs, and deliver personalized mentorship feedback.
+              {t("mentor.headerDesc")}
             </p>
           </div>
           <div className="absolute right-[-20px] bottom-[-30px] opacity-10 pointer-events-none">
@@ -200,7 +200,7 @@ export default function MentorDashboard() {
           <Card className="border border-border/60 shadow-sm">
             <CardContent className="p-5 flex items-center justify-between">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Active In-Review</p>
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("mentor.activeInReview")}</p>
                 <h3 className="text-2xl font-bold mt-1 text-foreground">{activeReviews.length}</h3>
               </div>
               <div className="h-10 w-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-600 dark:text-blue-400">
@@ -212,7 +212,7 @@ export default function MentorDashboard() {
           <Card className="border border-border/60 shadow-sm">
             <CardContent className="p-5 flex items-center justify-between">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Available Pool</p>
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("mentor.availablePool")}</p>
                 <h3 className="text-2xl font-bold mt-1 text-amber-600 dark:text-amber-400">{poolSubmissions.length}</h3>
               </div>
               <div className="h-10 w-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500">
@@ -224,7 +224,7 @@ export default function MentorDashboard() {
           <Card className="border border-border/60 shadow-sm">
             <CardContent className="p-5 flex items-center justify-between">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Completed</p>
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("mentor.completed")}</p>
                 <h3 className="text-2xl font-bold mt-1 text-emerald-600 dark:text-emerald-400">{completedReviews.length}</h3>
               </div>
               <div className="h-10 w-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
@@ -236,7 +236,7 @@ export default function MentorDashboard() {
           <Card className="border border-border/60 shadow-sm">
             <CardContent className="p-5 flex items-center justify-between">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Avg Rating</p>
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("mentor.avgRating")}</p>
                 <h3 className="text-2xl font-bold mt-1 text-amber-600 dark:text-amber-400">{averageRating} / 5.0</h3>
               </div>
               <div className="h-10 w-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-600 dark:text-amber-400">
@@ -252,19 +252,19 @@ export default function MentorDashboard() {
             <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full sm:w-auto">
               <TabsList className="grid grid-cols-3 w-full sm:w-auto">
                 <TabsTrigger value="active" className="gap-2 text-xs sm:text-sm">
-                  Active Reviews
+                  {t("mentor.tabActive")}
                   <Badge variant="secondary" className="px-1.5 py-0 text-[10px] rounded-full">
                     {activeReviews.length}
                   </Badge>
                 </TabsTrigger>
                 <TabsTrigger value="pool" className="gap-2 text-xs sm:text-sm">
-                  Available Pool
+                  {t("mentor.tabPool")}
                   <Badge variant="secondary" className="px-1.5 py-0 text-[10px] rounded-full bg-amber-500/10 text-amber-600">
                     {poolSubmissions.length}
                   </Badge>
                 </TabsTrigger>
                 <TabsTrigger value="completed" className="gap-2 text-xs sm:text-sm">
-                  Archive ({completedReviews.length})
+                  {t("mentor.tabArchive", { count: completedReviews.length })}
                 </TabsTrigger>
               </TabsList>
             </Tabs>
@@ -272,7 +272,7 @@ export default function MentorDashboard() {
             <div className="relative w-full sm:w-64">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search by student or university..."
+                placeholder={t("mentor.searchPlaceholder")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-8 text-xs h-9"
@@ -284,16 +284,16 @@ export default function MentorDashboard() {
           {activeTab === "active" && (
             <div className="space-y-4">
               {isMyReviewsLoading ? (
-                <div className="text-center py-12 text-muted-foreground">Loading active reviews...</div>
+                <div className="text-center py-12 text-muted-foreground">{t("mentor.loadingActive")}</div>
               ) : filteredActive.length === 0 ? (
                 <Card className="border-dashed border-2 p-12 text-center">
                   <Clock className="h-10 w-10 text-muted-foreground/40 mx-auto mb-3" />
-                  <h3 className="font-semibold text-base text-foreground">No active reviews claimed</h3>
+                  <h3 className="font-semibold text-base text-foreground">{t("mentor.noActiveTitle")}</h3>
                   <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
-                    Claim student submissions from the "Available Pool" tab to start reviewing documents.
+                    {t("mentor.noActiveDesc")}
                   </p>
                   <Button variant="outline" size="sm" className="mt-4 gap-2" onClick={() => setActiveTab("pool")}>
-                    <FileCheck className="h-4 w-4" /> Go to Available Pool
+                    <FileCheck className="h-4 w-4" /> {t("mentor.goToPool")}
                   </Button>
                 </Card>
               ) : (
@@ -308,17 +308,17 @@ export default function MentorDashboard() {
                           <div>
                             <div className="flex items-center gap-2 flex-wrap">
                               <span className="font-semibold text-foreground text-base">
-                                {sub.user ? `${sub.user.firstName} ${sub.user.lastName}` : "Student"}
+                                {sub.user ? `${sub.user.firstName} ${sub.user.lastName}` : t("mentor.student")}
                               </span>
                               <Badge className="bg-blue-500/10 text-blue-600 dark:text-blue-400 hover:bg-blue-500/20 border-0 text-xs">
-                                In Review
+                                {t("mentor.statusInReview")}
                               </Badge>
                               <Badge variant="outline" className="text-xs font-normal">
                                 {getDocTypeLabel(sub.documentType)}
                               </Badge>
                             </div>
                             <div className="text-xs text-muted-foreground mt-1">
-                              Email: {sub.user?.email || "N/A"} • Submitted on {new Date(sub.createdAt).toLocaleDateString()}
+                              {t("mentor.email")}: {sub.user?.email || "N/A"} • {t("mentor.submittedOn", { date: new Date(sub.createdAt).toLocaleDateString() })}
                             </div>
                           </div>
                         </div>
@@ -331,7 +331,7 @@ export default function MentorDashboard() {
                             disabled={unclaimMutation.isPending}
                             className="text-xs text-muted-foreground hover:text-destructive"
                           >
-                            Release
+                            {t("mentor.release")}
                           </Button>
                           <Button
                             size="sm"
@@ -339,7 +339,7 @@ export default function MentorDashboard() {
                             className="text-xs gap-1.5 font-medium shadow-sm"
                           >
                             <MessageSquare className="h-3.5 w-3.5" />
-                            Provide Feedback
+                            {t("mentor.provideFeedback")}
                           </Button>
                         </div>
                       </div>
@@ -349,22 +349,22 @@ export default function MentorDashboard() {
                         <div className="flex items-start gap-2">
                           <Building2 className="h-4 w-4 text-primary shrink-0 mt-0.5" />
                           <div>
-                            <span className="font-semibold text-foreground">Target Program / University:</span>
-                            <p className="text-muted-foreground mt-0.5">{sub.targetUniversity || "Not specified"}</p>
+                            <span className="font-semibold text-foreground">{t("mentor.targetUniversity")}</span>
+                            <p className="text-muted-foreground mt-0.5">{sub.targetUniversity || t("mentor.notSpecified")}</p>
                           </div>
                         </div>
                         <div className="flex items-start gap-2">
                           <HelpCircle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
                           <div>
-                            <span className="font-semibold text-foreground">Student Notes:</span>
-                            <p className="text-muted-foreground mt-0.5">{sub.studentNotes || "No specific instructions provided."}</p>
+                            <span className="font-semibold text-foreground">{t("mentor.studentNotes")}</span>
+                            <p className="text-muted-foreground mt-0.5">{sub.studentNotes || t("mentor.noStudentNotes")}</p>
                           </div>
                         </div>
                       </div>
 
                       {/* Files to download */}
                       <div className="flex items-center gap-2 flex-wrap pt-1">
-                        <span className="text-xs font-medium text-foreground mr-1">Attached Files:</span>
+                        <span className="text-xs font-medium text-foreground mr-1">{t("mentor.attachedFiles")}</span>
                         {sub.files.map((file, idx) => (
                           <Button
                             key={idx}
@@ -375,7 +375,7 @@ export default function MentorDashboard() {
                               try {
                                 await downloadAuthenticatedFile(file.url, file.originalName || "document");
                               } catch {
-                                toast.error("Download failed");
+                                toast.error(t("mentor.downloadFailed"));
                               }
                             }}
                             className="h-8 gap-1.5 text-xs bg-background"
@@ -397,13 +397,13 @@ export default function MentorDashboard() {
           {activeTab === "pool" && (
             <div className="space-y-4">
               {isPoolLoading ? (
-                <div className="text-center py-12 text-muted-foreground">Loading available pool...</div>
+                <div className="text-center py-12 text-muted-foreground">{t("mentor.loadingPool")}</div>
               ) : filteredPool.length === 0 ? (
                 <Card className="border-dashed border-2 p-12 text-center">
                   <CheckCircle2 className="h-10 w-10 text-emerald-500/50 mx-auto mb-3" />
-                  <h3 className="font-semibold text-base text-foreground">Pool is all caught up!</h3>
+                  <h3 className="font-semibold text-base text-foreground">{t("mentor.poolCaughtUpTitle")}</h3>
                   <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
-                    There are currently no new student submissions waiting for review. Check back soon.
+                    {t("mentor.poolCaughtUpDesc")}
                   </p>
                 </Card>
               ) : (
@@ -418,17 +418,17 @@ export default function MentorDashboard() {
                           <div>
                             <div className="flex items-center gap-2 flex-wrap">
                               <span className="font-semibold text-foreground text-sm">
-                                {sub.user ? `${sub.user.firstName} ${sub.user.lastName}` : "Student Submission"}
+                                {sub.user ? `${sub.user.firstName} ${sub.user.lastName}` : t("mentor.studentSubmission")}
                               </span>
                               <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-500/20 text-xs">
-                                Waiting for Reviewer
+                                {t("mentor.waitingForReviewer")}
                               </Badge>
                               <Badge variant="secondary" className="text-xs font-normal">
                                 {getDocTypeLabel(sub.documentType)}
                               </Badge>
                             </div>
                             <div className="text-xs text-muted-foreground mt-1">
-                              Target: <span className="text-foreground font-medium">{sub.targetUniversity || "General Review"}</span> • Submitted {new Date(sub.createdAt).toLocaleDateString()}
+                              Target: <span className="text-foreground font-medium">{sub.targetUniversity || t("mentor.generalReview")}</span> • {t("mentor.submittedOn", { date: new Date(sub.createdAt).toLocaleDateString() })}
                             </div>
                           </div>
                         </div>
@@ -440,13 +440,13 @@ export default function MentorDashboard() {
                           className="gap-1.5 text-xs font-medium shrink-0 shadow-sm"
                         >
                           <FileCheck className="h-3.5 w-3.5" />
-                          Claim Review
+                          {t("mentor.claimReview")}
                         </Button>
                       </div>
 
                       {sub.studentNotes && (
                         <p className="text-xs text-muted-foreground bg-muted/40 p-2.5 rounded border border-border/40">
-                          <span className="font-semibold text-foreground">Notes:</span> {sub.studentNotes}
+                          <span className="font-semibold text-foreground">{t("mentor.notesLabel")}</span> {sub.studentNotes}
                         </p>
                       )}
                     </CardContent>
@@ -461,7 +461,7 @@ export default function MentorDashboard() {
             <div className="space-y-4">
               {filteredCompleted.length === 0 ? (
                 <Card className="border-dashed border-2 p-12 text-center">
-                  <div className="text-muted-foreground text-sm">No completed reviews yet.</div>
+                  <div className="text-muted-foreground text-sm">{t("mentor.noCompleted")}</div>
                 </Card>
               ) : (
                 filteredCompleted.map((sub) => (
@@ -475,10 +475,10 @@ export default function MentorDashboard() {
                           <div>
                             <div className="flex items-center gap-2">
                               <span className="font-semibold text-foreground text-sm">
-                                {sub.user ? `${sub.user.firstName} ${sub.user.lastName}` : "Student"}
+                                {sub.user ? `${sub.user.firstName} ${sub.user.lastName}` : t("mentor.student")}
                               </span>
                               <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-0 text-xs">
-                                Completed
+                                {t("mentor.completed")}
                               </Badge>
                               <div className="flex items-center gap-1 ml-2 text-amber-500 text-xs font-medium">
                                 <Star className="h-3.5 w-3.5 fill-amber-500" />
@@ -486,7 +486,7 @@ export default function MentorDashboard() {
                               </div>
                             </div>
                             <div className="text-xs text-muted-foreground mt-0.5">
-                              {getDocTypeLabel(sub.documentType)} • Reviewed on {sub.reviewedAt ? new Date(sub.reviewedAt).toLocaleDateString() : new Date(sub.updatedAt).toLocaleDateString()}
+                              {getDocTypeLabel(sub.documentType)} • {t("mentor.reviewedOn", { date: sub.reviewedAt ? new Date(sub.reviewedAt).toLocaleDateString() : new Date(sub.updatedAt).toLocaleDateString() })}
                             </div>
                           </div>
                         </div>
@@ -498,13 +498,13 @@ export default function MentorDashboard() {
                           className="text-xs gap-1.5"
                         >
                           <RefreshCw className="h-3.5 w-3.5" />
-                          Update Feedback
+                          {t("mentor.updateFeedback")}
                         </Button>
                       </div>
 
                       {sub.feedback && (
                         <div className="bg-muted/40 p-3 rounded-lg border border-border/40 text-xs space-y-1">
-                          <span className="font-semibold text-foreground">Your Feedback:</span>
+                          <span className="font-semibold text-foreground">{t("mentor.yourFeedback")}</span>
                           <p className="text-muted-foreground whitespace-pre-wrap">{sub.feedback}</p>
                         </div>
                       )}
@@ -522,10 +522,10 @@ export default function MentorDashboard() {
             <DialogHeader>
               <DialogTitle className="text-lg flex items-center gap-2">
                 <MessageSquare className="h-5 w-5 text-primary" />
-                Provide Review Feedback
+                {t("mentor.dialogTitle")}
               </DialogTitle>
               <DialogDescription className="text-xs">
-                Reviewing <span className="font-semibold text-foreground">{getDocTypeLabel(reviewingSubmission?.documentType)}</span> for{" "}
+                {t("mentor.dialogReviewing")} <span className="font-semibold text-foreground">{getDocTypeLabel(reviewingSubmission?.documentType)}</span> {t("mentor.dialogFor")}{" "}
                 <span className="font-semibold text-foreground">{reviewingSubmission?.user?.firstName} {reviewingSubmission?.user?.lastName}</span>.
               </DialogDescription>
             </DialogHeader>
@@ -535,11 +535,11 @@ export default function MentorDashboard() {
               <div className="bg-muted/50 p-3 rounded-lg border border-border/50 text-xs space-y-1">
                 <div>
                   <span className="font-semibold text-foreground">Target: </span>
-                  <span className="text-muted-foreground">{reviewingSubmission?.targetUniversity || "Not specified"}</span>
+                  <span className="text-muted-foreground">{reviewingSubmission?.targetUniversity || t("mentor.notSpecified")}</span>
                 </div>
                 {reviewingSubmission?.studentNotes && (
                   <div>
-                    <span className="font-semibold text-foreground">Student Notes: </span>
+                    <span className="font-semibold text-foreground">{t("mentor.studentNotes")} </span>
                     <span className="text-muted-foreground">{reviewingSubmission.studentNotes}</span>
                   </div>
                 )}
@@ -547,7 +547,7 @@ export default function MentorDashboard() {
 
               {/* Rating Selector */}
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-foreground">Evaluation Score</label>
+                <label className="text-xs font-semibold text-foreground">{t("mentor.evaluationScore")}</label>
                 <div className="flex items-center gap-2">
                   {[1, 2, 3, 4, 5].map((star) => (
                     <button
@@ -562,17 +562,17 @@ export default function MentorDashboard() {
                     </button>
                   ))}
                   <span className="text-xs font-medium text-muted-foreground ml-2">
-                    {rating === 5 ? "Excellent (Ready to submit)" : rating >= 4 ? "Good (Minor polishes)" : rating >= 3 ? "Satisfactory (Needs improvements)" : "Needs Major Revision"}
+                    {rating === 5 ? t("mentor.scoreExcellent") : rating >= 4 ? t("mentor.scoreGood") : rating >= 3 ? t("mentor.scoreSatisfactory") : t("mentor.scoreNeedsRevision")}
                   </span>
                 </div>
               </div>
 
               {/* Detailed Written Feedback */}
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-foreground">Written Feedback & Suggestions</label>
+                <label className="text-xs font-semibold text-foreground">{t("mentor.writtenFeedbackLabel")}</label>
                 <Textarea
                   rows={6}
-                  placeholder="Provide structured feedback:&#10;1. Key Strengths&#10;2. Areas for Improvement (Structure, Clarity, Tone)&#10;3. Specific suggestions for the Motivation / Story..."
+                  placeholder={t("mentor.writtenFeedbackPlaceholder")}
                   value={feedbackText}
                   onChange={(e) => setFeedbackText(e.target.value)}
                   className="text-xs leading-relaxed"
@@ -582,7 +582,7 @@ export default function MentorDashboard() {
 
               {/* Upload Annotated Review File */}
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-foreground">Attach Annotated / Corrected Document (Optional)</label>
+                <label className="text-xs font-semibold text-foreground">{t("mentor.attachFileLabel")}</label>
                 <div className="flex items-center gap-3">
                   <Input
                     type="file"
@@ -591,15 +591,15 @@ export default function MentorDashboard() {
                     className="text-xs file:text-xs file:font-medium"
                   />
                 </div>
-                <p className="text-[11px] text-muted-foreground">Upload your marked-up PDF or DOCX file with tracked changes.</p>
+                <p className="text-[11px] text-muted-foreground">{t("mentor.attachFileHelp")}</p>
               </div>
 
               <DialogFooter className="pt-3 gap-2">
                 <Button type="button" variant="outline" onClick={() => setReviewingSubmission(null)}>
-                  Cancel
+                  {t("mentor.cancel")}
                 </Button>
                 <Button type="submit" disabled={feedbackMutation.isPending} className="gap-2">
-                  {feedbackMutation.isPending ? "Submitting..." : "Complete & Send Review"}
+                  {feedbackMutation.isPending ? t("mentor.submitting") : t("mentor.sendReview")}
                 </Button>
               </DialogFooter>
             </form>
