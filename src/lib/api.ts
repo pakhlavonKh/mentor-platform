@@ -244,6 +244,12 @@ export interface Grant {
   link: string;
 }
 
+export interface LearningFile {
+  url: string;
+  mimeType: string;
+  name: string;
+}
+
 export interface LearningContent {
   id: string;
   title: LocalizedText;
@@ -251,6 +257,10 @@ export interface LearningContent {
   topic: LocalizedText;
   description: LocalizedText;
   duration: string;
+  fileUrl?: string;
+  thumbnailUrl?: string;
+  mimeType?: string;
+  files?: LearningFile[];
   completed?: boolean;
 }
 
