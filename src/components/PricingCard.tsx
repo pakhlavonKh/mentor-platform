@@ -33,13 +33,13 @@ export function PricingCard({ plan, onSelect, loading: externalLoading }: Pricin
 
     // If not logged in, redirect to login with return path
     if (!isLoggedIn) {
-      toast.info(t("pricing.loginRequired") || "Войдите или зарегистрируйтесь, чтобы продолжить выбор тарифа");
+      toast.info(t("pricing.loginRequired"));
       navigate(`/login?redirect=/profile&planId=${encodeURIComponent(plan.id)}`);
       return;
     }
 
     if (user?.role && user.role !== "student") {
-      toast.error("Покупка пакетов доступна только для аккаунтов студентов");
+      toast.error(t("pricing.studentOnly"));
       return;
     }
 
@@ -50,7 +50,7 @@ export function PricingCard({ plan, onSelect, loading: externalLoading }: Pricin
         price: plan.price,
         documents: plan.documents,
       });
-      toast.success(t("pricing.orderCreated") || "Заказ создан! Переходим к оплате...");
+      toast.success(t("pricing.orderCreated"));
       navigate(`/profile?orderId=${encodeURIComponent(order.id)}&newOrder=true`);
     } catch (err: any) {
       toast.error(err.message || "Ошибка при создании заказа");
@@ -68,7 +68,7 @@ export function PricingCard({ plan, onSelect, loading: externalLoading }: Pricin
       )}
       <CardHeader className="text-center pb-2 pt-6">
         <h3 className="font-display font-bold text-lg text-card-foreground">{lt(plan.name)}</h3>
-        <p className="text-muted-foreground text-sm">{plan.documents} {plan.documents === 1 ? t("pricing.document") : t("pricing.documents")}</p>
+        <p className="text-muted-foreground text-sm">{t("grantsFilter.documentsReviewed", { count: plan.documents })}</p>
         <div className="mt-3">
           <span className="font-display text-4xl font-bold text-card-foreground">${plan.price}</span>
         </div>

@@ -30,12 +30,12 @@ export default function HomePage() {
 
   const handlePlanSelect = async (plan: PricingPlan) => {
     if (!isLoggedIn) {
-      toast.info(t("pricing.loginRequired") || "Войдите или зарегистрируйтесь, чтобы продолжить выбор тарифа");
+      toast.info(t("pricing.loginRequired"));
       navigate(`/login?redirect=/profile&planId=${encodeURIComponent(plan.id)}`);
       return;
     }
     if (user?.role && user.role !== "student") {
-      toast.error("Покупка пакетов доступна только для аккаунтов студентов");
+      toast.error(t("pricing.studentOnly"));
       return;
     }
     try {
@@ -44,7 +44,7 @@ export default function HomePage() {
         price: plan.price,
         documents: plan.documents,
       });
-      toast.success(t("pricing.orderCreated") || "Заказ создан! Переходим к оплате...");
+      toast.success(t("pricing.orderCreated"));
       navigate(`/profile?orderId=${encodeURIComponent(order.id)}&newOrder=true`);
     } catch (err: any) {
       toast.error(err.message || "Ошибка при создании заказа");

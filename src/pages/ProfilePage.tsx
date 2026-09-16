@@ -88,7 +88,7 @@ export default function ProfilePage() {
           });
           if (active) {
             setOrders((prev) => [created, ...prev.filter((o) => o.id !== created.id)]);
-            toast.success("Заказ тарифа успешно оформлен! Завершите перевод через Telegram.");
+            toast.success(t("pricing.orderCreatedSuccess"));
             navigate(`/profile?orderId=${encodeURIComponent(created.id)}&newOrder=true`, { replace: true });
           }
         }
