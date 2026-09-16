@@ -15,6 +15,7 @@ import { NavLink } from "@/components/NavLink";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { useTranslation } from "react-i18next";
+import { Logo } from "@/components/Logo";
 import {
   Sidebar,
   SidebarContent,
@@ -39,14 +40,8 @@ export function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader className="p-4 border-b border-sidebar-border">
-        <Link to="/" className="flex items-center gap-2.5 overflow-hidden">
-          <img
-            src="/logo.png"
-            alt="StudyQadam"
-            className="h-8 object-contain shrink-0"
-          />
-        </Link>
+      <SidebarHeader className="p-4 border-b border-sidebar-border flex items-center justify-start">
+        <Logo size="sm" hideText={collapsed} />
       </SidebarHeader>
 
       <SidebarContent>

@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Send, Mail, Phone, ExternalLink } from "lucide-react";
+import { Logo } from "@/components/Logo";
 
 export function Footer() {
   const { t, i18n } = useTranslation();
@@ -9,17 +10,11 @@ export function Footer() {
   return (
     <footer className="border-t border-border/70 bg-card/40 backdrop-blur-md mt-auto px-4 sm:px-6 lg:px-8">
       {/* Main Footer Container */}
-      <div className="max-w-7xl mx-auto py-12 lg:py-14">
+      <div className="max-w-7xl mx-auto py-2 lg:py-4">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
           {/* Col 1: Brand & About (4 cols) */}
           <div className="lg:col-span-4 space-y-4">
-            <Link to="/" className="inline-block">
-              <img
-                src="/logo.png"
-                alt="StudyQadam"
-                className="h-10 w-auto object-contain"
-              />
-            </Link>
+            <Logo size="lg" />
             <p className="text-sm text-muted-foreground leading-relaxed max-w-sm">
               {t("footer.aboutDesc")}
             </p>
@@ -124,13 +119,13 @@ export function Footer() {
         </div>
 
         {/* Legal Disclaimer */}
-        <div className="mt-10 pt-6 border-t border-border/50 text-xs text-muted-foreground/80 leading-relaxed">
+        <div className="mt-10 pt-2 border-t border-border/50 text-xs text-muted-foreground/80 leading-relaxed">
           <p>{t("footer.disclaimer")}</p>
         </div>
       </div>
 
       {/* Bottom Sub-footer */}
-      <div className="border-t border-border/50 py-4 bg-muted/20 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8">
+      <div className="border-t border-border/50 py-2 bg-muted/20 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-muted-foreground">
           <p>© {currentYear} StudyQadam. {t("footer.rights")}</p>
           <div className="flex items-center gap-2 text-muted-foreground/70">

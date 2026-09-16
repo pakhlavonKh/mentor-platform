@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { useAuth } from "@/context/AuthContext";
+import { Logo } from "@/components/Logo";
 
 const NAV_ITEMS = [
   { labelKey: "common.home", path: "/" },
@@ -29,13 +30,7 @@ export function HeaderNav() {
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2.5">
-            <img
-              src="/logo.png"
-              alt="StudyQadam"
-              className="h-36 object-contain"
-            />
-          </Link>
+          <Logo size="md" />
 
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-1 relative">

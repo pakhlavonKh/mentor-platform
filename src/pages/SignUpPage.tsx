@@ -10,6 +10,7 @@ import { Eye, EyeOff, ShieldCheck } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { GoogleAuthButton } from "@/components/GoogleAuthButton";
+import { Logo } from "@/components/Logo";
 
 export default function SignUpPage() {
   const { t } = useTranslation();
@@ -60,11 +61,7 @@ export default function SignUpPage() {
         className="w-full max-w-md"
       >
         <div className="flex justify-center mb-8">
-          <img
-            src="/logo.png"
-            alt="StudyQadam"
-            className="h-16 object-contain"
-          />
+          <Logo size="lg" />
         </div>
 
         <Card className="shadow-soft border-0">
