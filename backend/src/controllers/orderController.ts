@@ -1,9 +1,11 @@
 import { Request, Response } from "express";
 import { AppDataSource } from "../config/database.js";
 import { Order } from "../entities/Order.js";
+import { User } from "../entities/User.js";
 import { AuthRequest } from "../middleware/auth.js";
 import { sendMail } from "../utils/mailer.js";
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const errorMessage = (error: unknown) => (error instanceof Error ? error.message : "Unexpected error");
 
 const orderRepository = AppDataSource.getRepository(Order);
@@ -58,10 +60,16 @@ export const getOrderById = async (req: Request, res: Response) => {
     if (!userId) return res.status(401).json({ message: "Unauthorized" });
 
     const { id } = req.params;
+    if (!id || !UUID_REGEX.test(id)) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
     const order = await orderRepository.findOne({ where: { id } });
     if (!order) return res.status(404).json({ message: "Order not found" });
 
-    if (order.userId !== userId) {
+    const userRepository = AppDataSource.getRepository(User);
+    const currentUser = await userRepository.findOne({ where: { id: userId } });
+    if (order.userId !== userId && currentUser?.role !== "admin") {
       return res.status(403).json({ message: "Forbidden" });
     }
 
@@ -89,6 +97,10 @@ export const listAllOrders = async (req: Request, res: Response) => {
 export const updateOrderStatus = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
+    if (!id || !UUID_REGEX.test(id)) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
     const { status } = req.body;
     if (!["pending", "in_review", "completed", "failed"].includes(status)) return res.status(400).json({ message: "Invalid status" });
 
