@@ -12,8 +12,9 @@ import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { User, Mail, BookOpen, Bookmark, FileCheck, CreditCard, Clock, CheckCircle2, LogOut, ArrowRight, Camera, Star, Send, ExternalLink, AlertCircle, Sparkles } from "lucide-react";
+import { User, Mail, BookOpen, Bookmark, FileCheck, CreditCard, Clock, CheckCircle2, LogOut, ArrowRight, Camera, Star, Send, ExternalLink, AlertCircle, Sparkles, Eye, Download } from "lucide-react";
 import { api, type LearningContent, type Grant, type Submission, type Order, type PricingPlan, downloadAuthenticatedFile } from "@/lib/api";
+import { DynamicDocumentViewer, type ViewerFileItem } from "@/components/DynamicDocumentViewer";
 import { useLocale } from "@/hooks/use-locale";
 import { GrantCard } from "@/components/GrantCard";
 import { DashboardCalendar } from "@/components/DashboardCalendar";
@@ -52,6 +53,19 @@ export default function ProfilePage() {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [docType, setDocType] = useState("motivation_letter");
+
+  // Dynamic In-Browser Document Viewer state
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [viewerFiles, setViewerFiles] = useState<ViewerFileItem[]>([]);
+  const [viewerIndex, setViewerIndex] = useState(0);
+  const [viewerTitle, setViewerTitle] = useState("");
+
+  const handleOpenViewer = (files: ViewerFileItem[], index = 0, title = "") => {
+    setViewerFiles(files);
+    setViewerIndex(index);
+    setViewerTitle(title);
+    setViewerOpen(true);
+  };
 
   useEffect(() => {
     if (!isLoggedIn) {
@@ -612,27 +626,46 @@ export default function ProfilePage() {
                           </div>
                         </div>
 
-                        {/* Download Original File */}
+                        {/* Document File preview or download */}
                         {s.files && s.files.length > 0 && (
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
                             {s.files.map((file, i) => (
-                              <Button
+                              <div
                                 key={i}
-                                variant="outline"
-                                size="sm"
-                                className="h-8 gap-1.5 text-xs"
-                                onClick={async () => {
-                                  if (!file?.url) return;
-                                  try {
-                                    await downloadAuthenticatedFile(file.url, file.originalName || "document");
-                                  } catch {
-                                    toast.error("Download failed");
-                                  }
-                                }}
+                                className="inline-flex items-center rounded-lg border border-border/70 bg-card hover:bg-secondary/40 hover:border-primary/40 transition-colors p-1 pl-2.5 gap-2 text-xs shadow-2xs"
                               >
-                                <FileCheck className="h-3.5 w-3.5 text-primary" />
-                                <span className="max-w-[140px] truncate">{file.originalName}</span>
-                              </Button>
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    handleOpenViewer(
+                                      s.files,
+                                      i,
+                                      `${getDocLabel(s.documentType)} • ${s.targetUniversity || "Submission"}`
+                                    )
+                                  }
+                                  className="flex items-center gap-1.5 font-medium text-foreground hover:text-primary transition-colors text-left"
+                                  title={t("viewer.viewDocument")}
+                                >
+                                  <Eye className="h-3.5 w-3.5 text-primary shrink-0" />
+                                  <span className="max-w-[140px] truncate">{file.originalName}</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={async (e) => {
+                                    e.stopPropagation();
+                                    if (!file?.url) return;
+                                    try {
+                                      await downloadAuthenticatedFile(file.url, file.originalName || "document");
+                                    } catch {
+                                      toast.error("Download failed");
+                                    }
+                                  }}
+                                  className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                                  title={t("viewer.download")}
+                                >
+                                  <Download className="h-3 w-3" />
+                                </button>
+                              </div>
                             ))}
                           </div>
                         )}
@@ -669,25 +702,44 @@ export default function ProfilePage() {
                           {/* Mentor annotated files */}
                           {s.feedbackFiles && s.feedbackFiles.length > 0 && (
                             <div className="pt-2 flex items-center gap-2 flex-wrap">
-                              <span className="text-xs font-semibold text-foreground">Annotated Feedback File:</span>
+                              <span className="text-xs font-semibold text-emerald-800 dark:text-emerald-300">Annotated Feedback File:</span>
                               {s.feedbackFiles.map((ff, idx) => (
-                                <Button
+                                <div
                                   key={idx}
-                                  variant="secondary"
-                                  size="sm"
-                                  className="h-7 text-xs gap-1.5 shadow-sm"
-                                  onClick={async () => {
-                                    if (!ff?.url) return;
-                                    try {
-                                      await downloadAuthenticatedFile(ff.url, ff.originalName || "feedback-document");
-                                    } catch {
-                                      toast.error("Download failed");
-                                    }
-                                  }}
+                                  className="inline-flex items-center rounded-lg border border-emerald-500/30 bg-emerald-500/5 hover:bg-emerald-500/10 transition-colors p-1 pl-2.5 gap-2 text-xs shadow-2xs"
                                 >
-                                  <FileCheck className="h-3.5 w-3.5 text-emerald-600" />
-                                  <span className="max-w-[160px] truncate">{ff.originalName}</span>
-                                </Button>
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      handleOpenViewer(
+                                        s.feedbackFiles!,
+                                        idx,
+                                        `Mentor Feedback • ${getDocLabel(s.documentType)}`
+                                      )
+                                    }
+                                    className="flex items-center gap-1.5 font-medium text-foreground hover:text-emerald-600 transition-colors text-left"
+                                    title={t("viewer.viewDocument")}
+                                  >
+                                    <Eye className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                                    <span className="max-w-[150px] truncate">{ff.originalName}</span>
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={async (e) => {
+                                      e.stopPropagation();
+                                      if (!ff?.url) return;
+                                      try {
+                                        await downloadAuthenticatedFile(ff.url, ff.originalName || "feedback-document");
+                                      } catch {
+                                        toast.error("Download failed");
+                                      }
+                                    }}
+                                    className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                                    title={t("viewer.download")}
+                                  >
+                                    <Download className="h-3 w-3" />
+                                  </button>
+                                </div>
                               ))}
                             </div>
                           )}
@@ -775,6 +827,15 @@ export default function ProfilePage() {
             </CardContent>
           </Card>
         </motion.div>
+
+        {/* Dynamic In-Browser Document Viewer */}
+        <DynamicDocumentViewer
+          isOpen={viewerOpen}
+          onClose={() => setViewerOpen(false)}
+          files={viewerFiles}
+          initialIndex={viewerIndex}
+          title={viewerTitle}
+        />
       </div>
     </PageLayout>
   );

@@ -2,8 +2,9 @@ import { useParams, Navigate } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { PageLayout } from "@/components/PageLayout";
-import { api, type LearningContent } from "@/lib/api";
+import { api, type LearningContent, downloadAuthenticatedFile } from "@/lib/api";
 import { useLocale } from "@/hooks/use-locale";
+import { DynamicDocumentViewer, type ViewerFileItem } from "@/components/DynamicDocumentViewer";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -35,6 +36,19 @@ export default function LearningDetail() {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const fileRef = useRef<HTMLInputElement | null>(null);
+
+  // Dynamic In-Browser Document Viewer state
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [viewerFiles, setViewerFiles] = useState<ViewerFileItem[]>([]);
+  const [viewerIndex, setViewerIndex] = useState(0);
+  const [viewerTitle, setViewerTitle] = useState("");
+
+  const handleOpenViewer = (files: ViewerFileItem[], index = 0, title = "") => {
+    setViewerFiles(files);
+    setViewerIndex(index);
+    setViewerTitle(title);
+    setViewerOpen(true);
+  };
 
   useEffect(() => {
     if (!id) return;
@@ -162,31 +176,51 @@ export default function LearningDetail() {
     const isPdf = file.mimeType === "application/pdf";
     const isImage = file.mimeType?.startsWith("image");
 
+    const allFiles: ViewerFileItem[] = (content?.files || []).map((f) => ({
+      url: f.url,
+      originalName: f.name,
+      mimeType: f.mimeType,
+    }));
+
     return (
       <div
         key={file.url}
         className="flex items-center justify-between p-3 border border-border/80 rounded-xl hover:bg-muted/40 transition-colors"
       >
-        <div className="flex items-center gap-3 truncate">
+        <button
+          type="button"
+          onClick={() => handleOpenViewer(allFiles, index, lt(content!.title))}
+          className="flex items-center gap-3 truncate text-left group"
+        >
           {isPdf && <FileText className="h-5 w-5 text-red-500 shrink-0" />}
           {isImage && <ImageIcon className="h-5 w-5 text-blue-500 shrink-0" />}
-          {!isPdf && !isImage && <Download className="h-5 w-5 text-muted-foreground shrink-0" />}
-          <span className="text-sm font-medium truncate">{file.name}</span>
-        </div>
+          {!isPdf && !isImage && <FileText className="h-5 w-5 text-muted-foreground shrink-0" />}
+          <span className="text-sm font-medium truncate group-hover:text-primary transition-colors">
+            {file.name}
+          </span>
+        </button>
         <div className="flex items-center gap-2 shrink-0">
-          {(isPdf || isImage) && (
-            <Button size="sm" variant="ghost" asChild>
-              <a href={`http://localhost:5000${file.url}`} target="_blank" rel="noopener noreferrer">
-                <Eye className="h-4 w-4 mr-1" />
-                {t("learning.view")}
-              </a>
-            </Button>
-          )}
-          <Button size="sm" variant="outline" asChild>
-            <a href={`http://localhost:5000${file.url}`} download>
-              <Download className="h-4 w-4 mr-1" />
-              {t("learning.download")}
-            </a>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => handleOpenViewer(allFiles, index, lt(content!.title))}
+          >
+            <Eye className="h-4 w-4 mr-1" />
+            {t("learning.view")}
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={async () => {
+              try {
+                await downloadAuthenticatedFile(file.url, file.name);
+              } catch {
+                toast.error("Download failed");
+              }
+            }}
+          >
+            <Download className="h-4 w-4 mr-1" />
+            {t("learning.download")}
           </Button>
         </div>
       </div>
@@ -339,6 +373,15 @@ export default function LearningDetail() {
             </div>
           </>
         )}
+
+        {/* Dynamic In-Browser Document Viewer */}
+        <DynamicDocumentViewer
+          isOpen={viewerOpen}
+          onClose={() => setViewerOpen(false)}
+          files={viewerFiles}
+          initialIndex={viewerIndex}
+          title={viewerTitle}
+        />
       </div>
     </PageLayout>
   );

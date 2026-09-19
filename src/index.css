@@ -119,4 +119,31 @@
   .text-rose-600 {
     color: hsl(var(--rose-600));
   }
+
+  /* Document Viewer Word (.docx) styles */
+  .study-docx-wrapper {
+    background: transparent !important;
+    padding: 1rem 0 !important;
+    width: 100% !important;
+  }
+
+  .study-docx-wrapper .docx-wrapper {
+    background: transparent !important;
+    padding: 0 !important;
+  }
+
+  .study-docx-wrapper .docx-wrapper > section.docx,
+  .study-docx-wrapper section.docx,
+  .study-docx-page {
+    background: #ffffff !important;
+    color: #1a202c !important;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+    border-radius: 6px !important;
+    margin: 0 auto 2rem auto !important;
+    box-sizing: border-box !important;
+  }
+
+  .study-docx-wrapper section.docx * {
+    color: inherit;
+  }
 }

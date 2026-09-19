@@ -34,9 +34,11 @@ import {
   Building2,
   HelpCircle,
   RefreshCw,
+  Eye,
 } from "lucide-react";
 import { api, type Submission, type Pagination, downloadAuthenticatedFile } from "@/lib/api";
 import { toast } from "sonner";
+import { DynamicDocumentViewer, type ViewerFileItem } from "@/components/DynamicDocumentViewer";
 
 export default function MentorDashboard() {
   const { t } = useTranslation();
@@ -52,6 +54,19 @@ export default function MentorDashboard() {
   const [rating, setRating] = useState<number>(5);
   const [reviewStatus, setReviewStatus] = useState<"completed" | "rejected">("completed");
   const [feedbackFile, setFeedbackFile] = useState<File | null>(null);
+
+  // Dynamic In-Browser Document Viewer state
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [viewerFiles, setViewerFiles] = useState<ViewerFileItem[]>([]);
+  const [viewerIndex, setViewerIndex] = useState(0);
+  const [viewerTitle, setViewerTitle] = useState("");
+
+  const handleOpenViewer = (files: ViewerFileItem[], index = 0, title = "") => {
+    setViewerFiles(files);
+    setViewerIndex(index);
+    setViewerTitle(title);
+    setViewerOpen(true);
+  };
 
   // Queries
   const { data: poolData, isLoading: isPoolLoading } = useQuery<{ data: Submission[]; pagination: Pagination }>({
@@ -362,30 +377,50 @@ export default function MentorDashboard() {
                         </div>
                       </div>
 
-                      {/* Files to download */}
-                      <div className="flex items-center gap-2 flex-wrap pt-1">
-                        <span className="text-xs font-medium text-foreground mr-1">{t("mentor.attachedFiles")}</span>
-                        {sub.files.map((file, idx) => (
-                          <Button
-                            key={idx}
-                            variant="outline"
-                            size="sm"
-                            onClick={async () => {
-                              if (!file.url) return;
-                              try {
-                                await downloadAuthenticatedFile(file.url, file.originalName || "document");
-                              } catch {
-                                toast.error(t("mentor.downloadFailed"));
-                              }
-                            }}
-                            className="h-8 gap-1.5 text-xs bg-background"
-                          >
-                            <FileText className="h-3.5 w-3.5 text-primary" />
-                            <span className="max-w-[180px] truncate">{file.originalName}</span>
-                            <Download className="h-3 w-3 text-muted-foreground ml-1" />
-                          </Button>
-                        ))}
-                      </div>
+                      {/* Files to preview or download */}
+                      {sub.files && sub.files.length > 0 && (
+                        <div className="flex items-center gap-2 flex-wrap pt-1">
+                          <span className="text-xs font-medium text-foreground mr-1">{t("mentor.attachedFiles")}</span>
+                          {sub.files.map((file, idx) => (
+                            <div
+                              key={idx}
+                              className="inline-flex items-center rounded-lg border border-border/70 bg-card hover:bg-secondary/40 hover:border-primary/40 transition-colors p-1 pl-2.5 gap-2 text-xs shadow-2xs"
+                            >
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleOpenViewer(
+                                    sub.files,
+                                    idx,
+                                    `${sub.user ? `${sub.user.firstName} ${sub.user.lastName}` : "Student"} • ${getDocTypeLabel(sub.documentType)}`
+                                  )
+                                }
+                                className="flex items-center gap-1.5 font-medium text-foreground hover:text-primary transition-colors text-left"
+                                title={t("viewer.viewDocument")}
+                              >
+                                <Eye className="h-3.5 w-3.5 text-primary shrink-0" />
+                                <span className="max-w-[170px] truncate">{file.originalName}</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={async (e) => {
+                                  e.stopPropagation();
+                                  if (!file.url) return;
+                                  try {
+                                    await downloadAuthenticatedFile(file.url, file.originalName || "document");
+                                  } catch {
+                                    toast.error(t("mentor.downloadFailed"));
+                                  }
+                                }}
+                                className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                                title={t("viewer.download")}
+                              >
+                                <Download className="h-3 w-3" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 ))
@@ -449,6 +484,31 @@ export default function MentorDashboard() {
                           <span className="font-semibold text-foreground">{t("mentor.notesLabel")}</span> {sub.studentNotes}
                         </p>
                       )}
+
+                      {/* Pool attached files preview */}
+                      {sub.files && sub.files.length > 0 && (
+                        <div className="flex items-center gap-2 flex-wrap pt-1">
+                          <span className="text-xs font-medium text-foreground mr-1">{t("mentor.attachedFiles")}</span>
+                          {sub.files.map((file, idx) => (
+                            <button
+                              key={idx}
+                              type="button"
+                              onClick={() =>
+                                handleOpenViewer(
+                                  sub.files,
+                                  idx,
+                                  `${sub.user ? `${sub.user.firstName} ${sub.user.lastName}` : "Student"} • ${getDocTypeLabel(sub.documentType)}`
+                                )
+                              }
+                              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-border/70 bg-card hover:bg-secondary/40 hover:border-primary/40 font-medium text-xs text-foreground hover:text-primary transition-colors"
+                              title={t("viewer.viewDocument")}
+                            >
+                              <Eye className="h-3.5 w-3.5 text-primary shrink-0" />
+                              <span className="max-w-[180px] truncate">{file.originalName}</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 ))
@@ -508,6 +568,57 @@ export default function MentorDashboard() {
                           <p className="text-muted-foreground whitespace-pre-wrap">{sub.feedback}</p>
                         </div>
                       )}
+
+                      {/* Completed files preview */}
+                      {((sub.files && sub.files.length > 0) || (sub.feedbackFiles && sub.feedbackFiles.length > 0)) && (
+                        <div className="flex items-center gap-3 flex-wrap pt-1 text-xs">
+                          {sub.files && sub.files.length > 0 && (
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="font-medium text-foreground">{t("mentor.attachedFiles")}</span>
+                              {sub.files.map((file, idx) => (
+                                <button
+                                  key={idx}
+                                  type="button"
+                                  onClick={() =>
+                                    handleOpenViewer(
+                                      sub.files,
+                                      idx,
+                                      `${sub.user ? `${sub.user.firstName} ${sub.user.lastName}` : "Student"} • ${getDocTypeLabel(sub.documentType)}`
+                                    )
+                                  }
+                                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded border border-border/70 bg-card hover:border-primary/40 text-xs text-foreground hover:text-primary"
+                                >
+                                  <Eye className="h-3 w-3 text-primary" />
+                                  <span className="max-w-[140px] truncate">{file.originalName}</span>
+                                </button>
+                              ))}
+                            </div>
+                          )}
+
+                          {sub.feedbackFiles && sub.feedbackFiles.length > 0 && (
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="font-medium text-emerald-600 dark:text-emerald-400">Annotated:</span>
+                              {sub.feedbackFiles.map((file, idx) => (
+                                <button
+                                  key={idx}
+                                  type="button"
+                                  onClick={() =>
+                                    handleOpenViewer(
+                                      sub.feedbackFiles!,
+                                      idx,
+                                      `Annotated Feedback • ${sub.user ? `${sub.user.firstName} ${sub.user.lastName}` : "Student"}`
+                                    )
+                                  }
+                                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded border border-emerald-500/30 bg-emerald-500/5 hover:bg-emerald-500/10 text-xs text-foreground hover:text-emerald-600"
+                                >
+                                  <Eye className="h-3 w-3 text-emerald-600" />
+                                  <span className="max-w-[140px] truncate">{file.originalName}</span>
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 ))
@@ -532,15 +643,43 @@ export default function MentorDashboard() {
 
             <form onSubmit={handleSubmitFeedback} className="space-y-4 pt-2">
               {/* Student Target & Notes overview */}
-              <div className="bg-muted/50 p-3 rounded-lg border border-border/50 text-xs space-y-1">
-                <div>
-                  <span className="font-semibold text-foreground">Target: </span>
-                  <span className="text-muted-foreground">{reviewingSubmission?.targetUniversity || t("mentor.notSpecified")}</span>
-                </div>
-                {reviewingSubmission?.studentNotes && (
+              <div className="bg-muted/50 p-3.5 rounded-lg border border-border/50 text-xs space-y-2">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <div>
-                    <span className="font-semibold text-foreground">{t("mentor.studentNotes")} </span>
-                    <span className="text-muted-foreground">{reviewingSubmission.studentNotes}</span>
+                    <span className="font-semibold text-foreground">Target: </span>
+                    <span className="text-muted-foreground">{reviewingSubmission?.targetUniversity || t("mentor.notSpecified")}</span>
+                  </div>
+                  {reviewingSubmission?.studentNotes && (
+                    <div>
+                      <span className="font-semibold text-foreground">{t("mentor.studentNotes")} </span>
+                      <span className="text-muted-foreground">{reviewingSubmission.studentNotes}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Attached student documents to preview directly inside modal */}
+                {reviewingSubmission?.files && reviewingSubmission.files.length > 0 && (
+                  <div className="pt-1 border-t border-border/40 flex items-center gap-2 flex-wrap">
+                    <span className="font-semibold text-foreground">Review Document:</span>
+                    {reviewingSubmission.files.map((file, idx) => (
+                      <Button
+                        key={idx}
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        onClick={() =>
+                          handleOpenViewer(
+                            reviewingSubmission.files,
+                            idx,
+                            `Reviewing ${file.originalName} for ${reviewingSubmission.user?.firstName}`
+                          )
+                        }
+                        className="h-7 text-xs gap-1.5 font-medium bg-primary/10 text-primary hover:bg-primary/20"
+                      >
+                        <Eye className="h-3.5 w-3.5" />
+                        <span className="max-w-[180px] truncate">{file.originalName}</span>
+                      </Button>
+                    ))}
                   </div>
                 )}
               </div>
@@ -605,6 +744,15 @@ export default function MentorDashboard() {
             </form>
           </DialogContent>
         </Dialog>
+
+        {/* Dynamic In-Browser Document Viewer */}
+        <DynamicDocumentViewer
+          isOpen={viewerOpen}
+          onClose={() => setViewerOpen(false)}
+          files={viewerFiles}
+          initialIndex={viewerIndex}
+          title={viewerTitle}
+        />
       </div>
     </AppLayout>
   );

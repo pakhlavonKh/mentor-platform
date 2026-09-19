@@ -224,6 +224,24 @@ export async function downloadAuthenticatedFile(fileUrl: string, filename: strin
   URL.revokeObjectURL(a.href);
 }
 
+export async function fetchAuthenticatedFileBlob(fileUrl: string): Promise<{ blob: Blob; mimeType: string }> {
+  const base = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+  const serverRoot = base.replace(/\/api\/?$/, "");
+  const separator = fileUrl.includes("?") ? "&" : "?";
+  const fullUrl = (fileUrl.startsWith("http") ? fileUrl : `${serverRoot}${fileUrl}`) + `${separator}preview=true`;
+  const token = localStorage.getItem("authToken");
+  const res = await fetch(fullUrl, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  if (!res.ok) {
+    const errText = await res.text().catch(() => "");
+    throw new Error(errText || `Failed to fetch file (${res.status})`);
+  }
+  const blob = await res.blob();
+  const mimeType = res.headers.get("content-type") || blob.type || "";
+  return { blob, mimeType };
+}
+
 // ---------- Shared types ----------
 export interface LocalizedText {
   en: string;

@@ -152,6 +152,29 @@ export const downloadSubmissionFile = async (req: Request, res: Response) => {
 
     if (!fs.existsSync(resolvedPath)) return res.status(404).json({ message: "File not found on disk" });
 
+    const isPreview = req.query.preview === "true" || req.query.inline === "true";
+    if (isPreview) {
+      const ext = path.extname(matchedFile.originalName || filename).toLowerCase();
+      let mimeType = matchedFile.mimeType;
+      if (!mimeType || mimeType === "application/octet-stream") {
+        if (ext === ".pdf") mimeType = "application/pdf";
+        else if (ext === ".docx") mimeType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+        else if (ext === ".doc") mimeType = "application/msword";
+        else if (ext === ".png") mimeType = "image/png";
+        else if (ext === ".jpg" || ext === ".jpeg") mimeType = "image/jpeg";
+        else if (ext === ".webp") mimeType = "image/webp";
+        else if (ext === ".txt") mimeType = "text/plain; charset=utf-8";
+        else mimeType = "application/octet-stream";
+      }
+
+      res.setHeader("Content-Type", mimeType);
+      res.setHeader(
+        "Content-Disposition",
+        `inline; filename="${encodeURIComponent(matchedFile.originalName || filename)}"`
+      );
+      return res.sendFile(resolvedPath);
+    }
+
     res.download(resolvedPath, matchedFile.originalName || filename);
   } catch (error) {
     console.error(error);
