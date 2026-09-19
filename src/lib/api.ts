@@ -81,6 +81,19 @@ export const api = {
       return request<{ data: LearningContent[]; pagination: Pagination }>(`/learning${qs}`);
     },
     get: (id: string) => request<LearningContent>(`/learning/${id}`),
+    create: (data: any) => request<LearningContent>(`/learning`, { method: "POST", body: JSON.stringify(data) }),
+    update: (id: string, data: any) => request<LearningContent>(`/learning/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+    delete: (id: string) => request<{ message: string }>(`/learning/${id}`, { method: "DELETE" }),
+    saveTest: (id: string, test: LearningTest | null) =>
+      request<LearningContent>(`/learning/${id}/test`, { method: "PUT", body: JSON.stringify({ test }) }),
+    deleteTest: (id: string) =>
+      request<LearningContent>(`/learning/${id}/test`, { method: "DELETE" }),
+    submitTest: (id: string, answers: Record<string, number>) =>
+      request<TestSubmissionResult>(`/learning/${id}/test/submit`, { method: "POST", body: JSON.stringify({ answers }) }),
+    markComplete: (id: string) =>
+      request<{ success: boolean; completedLessons: string[] }>(`/learning/${id}/complete`, { method: "POST" }),
+    getProgress: () =>
+      request<UserLearningProgress>(`/learning/user/progress`),
   },
 
   // ---------- Telegram ----------
@@ -272,6 +285,43 @@ export interface LearningFile {
   name: string;
 }
 
+export interface TestQuestion {
+  id: string;
+  question: string;
+  options: string[];
+  correctOptionIndex: number;
+  explanation?: string;
+}
+
+export interface LearningTest {
+  id?: string;
+  title?: string;
+  description?: string;
+  passingScore: number;
+  questions: TestQuestion[];
+}
+
+export interface TestSubmissionResult {
+  score: number;
+  passed: boolean;
+  passingScore: number;
+  totalQuestions: number;
+  correctCount: number;
+  results: {
+    id: string;
+    question: string;
+    chosenOption?: number;
+    correctOption: number;
+    isCorrect: boolean;
+    explanation?: string;
+  }[];
+}
+
+export interface UserLearningProgress {
+  completedLessons: string[];
+  testResults: Record<string, { score: number; passed: boolean; completedAt: string }>;
+}
+
 export interface LearningContent {
   id: string;
   title: LocalizedText;
@@ -283,6 +333,7 @@ export interface LearningContent {
   thumbnailUrl?: string;
   mimeType?: string;
   files?: LearningFile[];
+  test?: LearningTest | null;
   completed?: boolean;
 }
 

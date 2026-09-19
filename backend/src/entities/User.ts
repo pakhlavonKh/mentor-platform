@@ -44,6 +44,12 @@ export class User {
   @JoinTable({ name: "user_saved_grants" })
   savedGrants?: Grant[];
 
+  @Column("jsonb", { nullable: true, default: () => "'[]'" })
+  completedLessons?: string[];
+
+  @Column("jsonb", { nullable: true, default: () => "'{}'" })
+  testResults?: Record<string, { score: number; passed: boolean; completedAt: string }>;
+
   @CreateDateColumn()
   createdAt!: Date;
 

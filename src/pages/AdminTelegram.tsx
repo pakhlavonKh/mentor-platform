@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AppLayout } from "@/components/AppLayout";
 import { useTranslation } from "react-i18next";
+import { useLocale } from "@/hooks/use-locale";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,6 +13,7 @@ import { Trash2, Edit2, Link as LinkIcon } from "lucide-react";
 
 export default function AdminTelegram() {
   const { t } = useTranslation();
+  const { lt } = useLocale();
   const queryClient = useQueryClient();
   const [editingId, setEditingId] = useState<string | null>(null);
 
@@ -44,13 +46,13 @@ export default function AdminTelegram() {
         },
         body: JSON.stringify(data),
       });
-      if (!response.ok) throw new Error("Failed to create post");
+      if (!response.ok) throw new Error(t("admin.postCreateError") || "Failed to create post");
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-telegram"] });
-      toast.success("Telegram post created");
-      setNewPost({ title: { en: "", ru: "", kz: "" }, description: { en: "", ru: "", kz: "" }, source: "", link: "" });
+      toast.success(t("admin.postCreated") || "Telegram post created");
+      setNewPost({ title: { en: "", ru: "", kz: "" }, description: { en: "", ru: "", kz: "" }, source: "", link: "", publish: true });
     },
     onError: (err) => toast.error(err instanceof Error ? err.message : "Error creating post"),
   });
@@ -65,12 +67,12 @@ export default function AdminTelegram() {
         },
         body: JSON.stringify(data),
       });
-      if (!response.ok) throw new Error("Failed to update post");
+      if (!response.ok) throw new Error(t("admin.postUpdateError") || "Failed to update post");
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-telegram"] });
-      toast.success("Post updated");
+      toast.success(t("admin.postUpdated") || "Post updated");
       setEditingId(null);
       setEditPost(null);
     },
@@ -85,12 +87,12 @@ export default function AdminTelegram() {
           Authorization: `Bearer ${localStorage.getItem("authToken")}`,
         },
       });
-      if (!response.ok) throw new Error("Failed to delete post");
+      if (!response.ok) throw new Error(t("admin.postDeleteError") || "Failed to delete post");
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-telegram"] });
-      toast.success("Post deleted");
+      toast.success(t("admin.postDeleted") || "Post deleted");
     },
     onError: (err) => toast.error(err instanceof Error ? err.message : "Error deleting post"),
   });
@@ -99,59 +101,70 @@ export default function AdminTelegram() {
     <AppLayout>
       <div className="max-w-6xl mx-auto space-y-6">
         <div>
-          <h1 className="font-display text-2xl font-bold text-foreground">{t("common.telegram") || "Telegram Posts"}</h1>
-          <p className="text-muted-foreground mt-2">Create and manage Telegram posts for the platform</p>
+          <h1 className="font-display text-2xl font-bold text-foreground">
+            {t("admin.telegramPosts") || t("common.telegram") || "Telegram Posts"}
+          </h1>
+          <p className="text-muted-foreground mt-2">
+            {t("admin.manageTelegramDesc") || "Create and manage Telegram posts for the platform"}
+          </p>
         </div>
 
         {/* Create New Post */}
         <Card className="p-6">
-          <h2 className="font-semibold text-lg mb-4">Create New Post</h2>
+          <h2 className="font-semibold text-lg mb-4">
+            {t("admin.createPost") || "Create New Post"}
+          </h2>
           <div className="space-y-4">
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-2">Title (English)</label>
+                <label className="block text-sm font-medium mb-2">{t("admin.titleEn") || "Title (English)"}</label>
                 <Input value={newPost.title.en} onChange={(e) => setNewPost({ ...newPost, title: { ...newPost.title, en: e.target.value } })} />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">Title (Russian)</label>
+                <label className="block text-sm font-medium mb-2">{t("admin.titleRu") || "Title (Russian)"}</label>
                 <Input value={newPost.title.ru} onChange={(e) => setNewPost({ ...newPost, title: { ...newPost.title, ru: e.target.value } })} />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">Title (Kazakh)</label>
+                <label className="block text-sm font-medium mb-2">{t("admin.titleKz") || "Title (Kazakh)"}</label>
                 <Input value={newPost.title.kz} onChange={(e) => setNewPost({ ...newPost, title: { ...newPost.title, kz: e.target.value } })} />
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-2">Description (English)</label>
+                <label className="block text-sm font-medium mb-2">{t("admin.descriptionEn") || "Description (English)"}</label>
                 <Textarea value={newPost.description.en} onChange={(e) => setNewPost({ ...newPost, description: { ...newPost.description, en: e.target.value } })} />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">Description (Russian)</label>
+                <label className="block text-sm font-medium mb-2">{t("admin.descriptionRu") || "Description (Russian)"}</label>
                 <Textarea value={newPost.description.ru} onChange={(e) => setNewPost({ ...newPost, description: { ...newPost.description, ru: e.target.value } })} />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">Description (Kazakh)</label>
+                <label className="block text-sm font-medium mb-2">{t("admin.descriptionKz") || "Description (Kazakh)"}</label>
                 <Textarea value={newPost.description.kz} onChange={(e) => setNewPost({ ...newPost, description: { ...newPost.description, kz: e.target.value } })} />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-2">Source</label>
+                <label className="block text-sm font-medium mb-2">{t("admin.postSource") || "Source"}</label>
                 <Input value={newPost.source} onChange={(e) => setNewPost({ ...newPost, source: e.target.value })} placeholder="e.g., @channel_name" />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">Link</label>
+                <label className="block text-sm font-medium mb-2">{t("admin.postLink") || "Link"}</label>
                 <Input value={newPost.link} onChange={(e) => setNewPost({ ...newPost, link: e.target.value })} placeholder="https://..." />
               </div>
             </div>
-            <div className="flex items-center gap-4">
-              <label className="flex items-center gap-2">
-                <input type="checkbox" checked={newPost.publish} onChange={(e) => setNewPost({ ...newPost, publish: e.target.checked })} />
-                <span className="text-sm">Publish to Telegram</span>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={newPost.publish}
+                  onChange={(e) => setNewPost({ ...newPost, publish: e.target.checked })}
+                  className="rounded border-border"
+                />
+                <span className="text-sm font-medium">{t("admin.publishToTelegram") || "Publish to Telegram"}</span>
               </label>
               <Button onClick={() => createMutation.mutate(newPost)} className="gradient-primary" disabled={createMutation.isPending}>
-                {createMutation.isPending ? "Creating..." : "Create Post"}
+                {createMutation.isPending ? t("admin.creating") || "Creating..." : t("admin.createPost") || "Create Post"}
               </Button>
             </div>
           </div>
@@ -159,49 +172,57 @@ export default function AdminTelegram() {
 
         {/* Existing Posts */}
         <div>
-          <h2 className="font-semibold text-lg mb-4">Posts</h2>
+          <h2 className="font-semibold text-lg mb-4">
+            {t("admin.existingPosts") || "Posts"}
+          </h2>
           <div className="grid gap-4">
             {posts.map((post) => (
               <Card key={post.id} className="p-4">
                 {editingId === post.id ? (
                   <div className="space-y-4">
-                    <div className="grid grid-cols-3 gap-4">
-                      <Input value={editPost.title.en} onChange={(e) => setEditPost({ ...editPost, title: { ...editPost.title, en: e.target.value } })} placeholder="Title EN" />
-                      <Input value={editPost.title.ru} onChange={(e) => setEditPost({ ...editPost, title: { ...editPost.title, ru: e.target.value } })} placeholder="Title RU" />
-                      <Input value={editPost.title.kz} onChange={(e) => setEditPost({ ...editPost, title: { ...editPost.title, kz: e.target.value } })} placeholder="Title KZ" />
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <Input value={editPost.title.en} onChange={(e) => setEditPost({ ...editPost, title: { ...editPost.title, en: e.target.value } })} placeholder={t("admin.titleEn") || "Title EN"} />
+                      <Input value={editPost.title.ru} onChange={(e) => setEditPost({ ...editPost, title: { ...editPost.title, ru: e.target.value } })} placeholder={t("admin.titleRu") || "Title RU"} />
+                      <Input value={editPost.title.kz} onChange={(e) => setEditPost({ ...editPost, title: { ...editPost.title, kz: e.target.value } })} placeholder={t("admin.titleKz") || "Title KZ"} />
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <Input value={editPost.source} onChange={(e) => setEditPost({ ...editPost, source: e.target.value })} placeholder="Source" />
-                      <Input value={editPost.link} onChange={(e) => setEditPost({ ...editPost, link: e.target.value })} placeholder="Link" />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <Input value={editPost.source} onChange={(e) => setEditPost({ ...editPost, source: e.target.value })} placeholder={t("admin.postSource") || "Source"} />
+                      <Input value={editPost.link} onChange={(e) => setEditPost({ ...editPost, link: e.target.value })} placeholder={t("admin.postLink") || "Link"} />
                     </div>
-                    <div className="flex gap-2">
-                      <label className="flex items-center gap-2">
-                        <input type="checkbox" checked={!!editPost?.publish} onChange={(e) => setEditPost({ ...editPost, publish: e.target.checked })} />
-                        <span className="text-sm">Publish to Telegram</span>
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" checked={!!editPost?.publish} onChange={(e) => setEditPost({ ...editPost, publish: e.target.checked })} className="rounded border-border" />
+                        <span className="text-sm font-medium">{t("admin.publishToTelegram") || "Publish to Telegram"}</span>
                       </label>
-                      <Button onClick={() => updateMutation.mutate({ id: post.id, data: editPost })} className="gradient-primary" disabled={updateMutation.isPending}>
-                        Save
-                      </Button>
-                      <Button variant="outline" onClick={() => setEditingId(null)}>
-                        Cancel
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button onClick={() => updateMutation.mutate({ id: post.id, data: editPost })} className="gradient-primary" disabled={updateMutation.isPending}>
+                          {t("common.save") || "Save"}
+                        </Button>
+                        <Button variant="outline" onClick={() => setEditingId(null)}>
+                          {t("common.cancel") || "Cancel"}
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 ) : (
-                  <div className="flex justify-between items-start">
+                  <div className="flex flex-col sm:flex-row justify-between sm:items-start gap-4">
                     <div className="flex-1">
-                      <h3 className="font-semibold">{typeof post.title === "string" ? post.title : post.title?.en}</h3>
-                      <p className="text-sm text-muted-foreground mt-1">{typeof post.description === "string" ? post.description : post.description?.en}</p>
-                      <div className="flex gap-2 mt-2">
-                        <span className="text-xs bg-muted px-2 py-1 rounded">{post.source}</span>
+                      <h3 className="font-semibold text-foreground">
+                        {typeof post.title === "string" ? post.title : lt(post.title)}
+                      </h3>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        {typeof post.description === "string" ? post.description : lt(post.description)}
+                      </p>
+                      <div className="flex items-center gap-2 mt-2 flex-wrap">
+                        {post.source && <span className="text-xs bg-muted px-2 py-1 rounded text-muted-foreground">{post.source}</span>}
                         {post.link && (
                           <a href={post.link} target="_blank" rel="noreferrer" className="text-xs text-primary flex items-center gap-1 hover:underline">
-                            <LinkIcon className="h-3 w-3" /> View
+                            <LinkIcon className="h-3 w-3" /> {t("common.browse") || "View"}
                           </a>
                         )}
                       </div>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 self-end sm:self-auto">
                       <Button
                         variant="outline"
                         size="sm"
@@ -216,7 +237,9 @@ export default function AdminTelegram() {
                         variant="destructive"
                         size="sm"
                         onClick={() => {
-                          if (confirm("Are you sure?")) deleteMutation.mutate(post.id);
+                          if (confirm(t("admin.confirmDeletePost") || "Are you sure you want to delete this post?")) {
+                            deleteMutation.mutate(post.id);
+                          }
                         }}
                         disabled={deleteMutation.isPending}
                       >

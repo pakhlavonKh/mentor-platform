@@ -6,6 +6,22 @@ export interface LearningFile {
   name: string;
 }
 
+export interface TestQuestion {
+  id: string;
+  question: string;
+  options: string[];
+  correctOptionIndex: number;
+  explanation?: string;
+}
+
+export interface LearningTest {
+  id?: string;
+  title?: string;
+  description?: string;
+  passingScore: number; // e.g. 70
+  questions: TestQuestion[];
+}
+
 @Entity("learning_content")
 export class LearningContent {
   @PrimaryGeneratedColumn("uuid")
@@ -40,6 +56,9 @@ export class LearningContent {
 
   @Column("jsonb", { nullable: true })
   files?: LearningFile[]; // Array of additional supporting files
+
+  @Column("jsonb", { nullable: true })
+  test?: LearningTest | null; // Optional assessment test
 
   @Column({ type: "boolean", default: false })
   completed!: boolean;

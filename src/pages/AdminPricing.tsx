@@ -2,15 +2,17 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AppLayout } from "@/components/AppLayout";
 import { useTranslation } from "react-i18next";
+import { useLocale } from "@/hooks/use-locale";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { api, type PricingPlan } from "@/lib/api";
 import { toast } from "sonner";
 import { Trash2, Edit2 } from "lucide-react";
 
 export default function AdminPricing() {
   const { t } = useTranslation();
+  const { lt } = useLocale();
   const queryClient = useQueryClient();
   const [editingId, setEditingId] = useState<string | null>(null);
 
@@ -35,7 +37,6 @@ export default function AdminPricing() {
 
   const createMutation = useMutation({
     mutationFn: async (data: any) => {
-      // Since the API doesn't have a create endpoint for pricing, we'll need to add it
       const response = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5000/api"}/pricing`, {
         method: "POST",
         headers: {
@@ -44,15 +45,15 @@ export default function AdminPricing() {
         },
         body: JSON.stringify(data),
       });
-      if (!response.ok) throw new Error("Failed to create pricing plan");
+      if (!response.ok) throw new Error(t("admin.pricingCreateError") || "Failed to create pricing plan");
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-pricing"] });
-      toast.success("Pricing plan created");
+      toast.success(t("admin.pricingCreated") || "Pricing plan created");
       setNewPlan({ name: { en: "", ru: "", kz: "" }, price: 0, documents: 0, popular: false });
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Error creating plan"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("admin.pricingCreateError") || "Error creating plan"),
   });
 
   const updateMutation = useMutation({
@@ -65,16 +66,16 @@ export default function AdminPricing() {
         },
         body: JSON.stringify(data),
       });
-      if (!response.ok) throw new Error("Failed to update pricing plan");
+      if (!response.ok) throw new Error(t("admin.pricingUpdateError") || "Failed to update pricing plan");
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-pricing"] });
-      toast.success("Pricing plan updated");
+      toast.success(t("admin.pricingUpdated") || "Pricing plan updated");
       setEditingId(null);
       setEditPlan(null);
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Error updating plan"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("admin.pricingUpdateError") || "Error updating plan"),
   });
 
   const deleteMutation = useMutation({
@@ -85,116 +86,200 @@ export default function AdminPricing() {
           Authorization: `Bearer ${localStorage.getItem("authToken")}`,
         },
       });
-      if (!response.ok) throw new Error("Failed to delete pricing plan");
+      if (!response.ok) throw new Error(t("admin.pricingDeleteError") || "Failed to delete pricing plan");
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-pricing"] });
-      toast.success("Pricing plan deleted");
+      toast.success(t("admin.pricingDeleted") || "Pricing plan deleted");
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : "Error deleting plan"),
+    onError: (err) => toast.error(err instanceof Error ? err.message : t("admin.pricingDeleteError") || "Error deleting plan"),
   });
 
   return (
     <AppLayout>
       <div className="max-w-6xl mx-auto space-y-6">
         <div>
-          <h1 className="font-display text-2xl font-bold text-foreground">{t("common.pricing") || "Pricing Management"}</h1>
-          <p className="text-muted-foreground mt-2">Create and manage pricing plans</p>
+          <h1 className="font-display text-2xl font-bold text-foreground">
+            {t("admin.managePricing") || t("common.pricing") || "Pricing Management"}
+          </h1>
+          <p className="text-muted-foreground mt-2">
+            {t("admin.managePricingDesc") || "Create and manage pricing plans"}
+          </p>
         </div>
 
         {/* Create New Plan */}
         <Card className="p-6">
-          <h2 className="font-semibold text-lg mb-4">Create New Plan</h2>
+          <h2 className="font-semibold text-lg mb-4">
+            {t("admin.createPlanTitle") || t("admin.createPricing") || "Create New Plan"}
+          </h2>
           <div className="space-y-4">
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-2">Name (English)</label>
-                <Input value={newPlan.name.en} onChange={(e) => setNewPlan({ ...newPlan, name: { ...newPlan.name, en: e.target.value } })} />
+                <label className="block text-sm font-medium mb-2">{t("admin.nameEn") || "Name (English)"}</label>
+                <Input
+                  value={newPlan.name.en}
+                  onChange={(e) => setNewPlan({ ...newPlan, name: { ...newPlan.name, en: e.target.value } })}
+                />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">Name (Russian)</label>
-                <Input value={newPlan.name.ru} onChange={(e) => setNewPlan({ ...newPlan, name: { ...newPlan.name, ru: e.target.value } })} />
+                <label className="block text-sm font-medium mb-2">{t("admin.nameRu") || "Name (Russian)"}</label>
+                <Input
+                  value={newPlan.name.ru}
+                  onChange={(e) => setNewPlan({ ...newPlan, name: { ...newPlan.name, ru: e.target.value } })}
+                />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">Name (Kazakh)</label>
-                <Input value={newPlan.name.kz} onChange={(e) => setNewPlan({ ...newPlan, name: { ...newPlan.name, kz: e.target.value } })} />
+                <label className="block text-sm font-medium mb-2">{t("admin.nameKz") || "Name (Kazakh)"}</label>
+                <Input
+                  value={newPlan.name.kz}
+                  onChange={(e) => setNewPlan({ ...newPlan, name: { ...newPlan.name, kz: e.target.value } })}
+                />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-2">Price</label>
-                <Input type="number" value={newPlan.price} onChange={(e) => setNewPlan({ ...newPlan, price: Number(e.target.value) })} />
+                <label className="block text-sm font-medium mb-2">{t("admin.planPrice") || "Price"}</label>
+                <Input
+                  type="number"
+                  value={newPlan.price}
+                  onChange={(e) => setNewPlan({ ...newPlan, price: Number(e.target.value) })}
+                />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">Documents Included</label>
-                <Input type="number" value={newPlan.documents} onChange={(e) => setNewPlan({ ...newPlan, documents: Number(e.target.value) })} />
+                <label className="block text-sm font-medium mb-2">
+                  {t("admin.planDocumentsIncluded") || t("admin.planDocuments") || "Documents Included"}
+                </label>
+                <Input
+                  type="number"
+                  value={newPlan.documents}
+                  onChange={(e) => setNewPlan({ ...newPlan, documents: Number(e.target.value) })}
+                />
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <input type="checkbox" checked={newPlan.popular} onChange={(e) => setNewPlan({ ...newPlan, popular: e.target.checked })} id="popular" />
-              <label htmlFor="popular" className="text-sm font-medium">Mark as most popular</label>
+              <input
+                type="checkbox"
+                checked={newPlan.popular}
+                onChange={(e) => setNewPlan({ ...newPlan, popular: e.target.checked })}
+                id="popular"
+                className="rounded border-border"
+              />
+              <label htmlFor="popular" className="text-sm font-medium cursor-pointer">
+                {t("admin.planPopular") || "Mark as most popular"}
+              </label>
             </div>
-            <Button onClick={() => createMutation.mutate(newPlan)} className="gradient-primary" disabled={createMutation.isPending}>
-              {createMutation.isPending ? "Creating..." : "Create Plan"}
+            <Button
+              onClick={() => createMutation.mutate(newPlan)}
+              className="gradient-primary"
+              disabled={createMutation.isPending}
+            >
+              {createMutation.isPending
+                ? t("admin.creating") || "Creating..."
+                : t("admin.createPricing") || "Create Plan"}
             </Button>
           </div>
         </Card>
 
         {/* Existing Plans */}
         <div>
-          <h2 className="font-semibold text-lg mb-4">Existing Plans</h2>
+          <h2 className="font-semibold text-lg mb-4">
+            {t("admin.existingPlans") || "Existing Plans"}
+          </h2>
           <div className="grid gap-4">
             {plans.map((plan) => (
               <Card key={plan.id} className="p-4">
                 {editingId === plan.id ? (
                   <div className="space-y-4">
-                    <div className="grid grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                       <div>
-                        <label className="block text-sm font-medium mb-2">Name (English)</label>
-                        <Input value={editPlan.name.en} onChange={(e) => setEditPlan({ ...editPlan, name: { ...editPlan.name, en: e.target.value } })} />
+                        <label className="block text-sm font-medium mb-2">{t("admin.nameEn") || "Name (English)"}</label>
+                        <Input
+                          value={editPlan.name?.en || ""}
+                          onChange={(e) => setEditPlan({ ...editPlan, name: { ...editPlan.name, en: e.target.value } })}
+                        />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium mb-2">Name (Russian)</label>
-                        <Input value={editPlan.name.ru} onChange={(e) => setEditPlan({ ...editPlan, name: { ...editPlan.name, ru: e.target.value } })} />
+                        <label className="block text-sm font-medium mb-2">{t("admin.nameRu") || "Name (Russian)"}</label>
+                        <Input
+                          value={editPlan.name?.ru || ""}
+                          onChange={(e) => setEditPlan({ ...editPlan, name: { ...editPlan.name, ru: e.target.value } })}
+                        />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium mb-2">Name (Kazakh)</label>
-                        <Input value={editPlan.name.kz} onChange={(e) => setEditPlan({ ...editPlan, name: { ...editPlan.name, kz: e.target.value } })} />
+                        <label className="block text-sm font-medium mb-2">{t("admin.nameKz") || "Name (Kazakh)"}</label>
+                        <Input
+                          value={editPlan.name?.kz || ""}
+                          onChange={(e) => setEditPlan({ ...editPlan, name: { ...editPlan.name, kz: e.target.value } })}
+                        />
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium mb-2">Price</label>
-                        <Input type="number" value={editPlan.price} onChange={(e) => setEditPlan({ ...editPlan, price: Number(e.target.value) })} />
+                        <label className="block text-sm font-medium mb-2">{t("admin.planPrice") || "Price"}</label>
+                        <Input
+                          type="number"
+                          value={editPlan.price}
+                          onChange={(e) => setEditPlan({ ...editPlan, price: Number(e.target.value) })}
+                        />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium mb-2">Documents</label>
-                        <Input type="number" value={editPlan.documents} onChange={(e) => setEditPlan({ ...editPlan, documents: Number(e.target.value) })} />
+                        <label className="block text-sm font-medium mb-2">
+                          {t("admin.planDocumentsIncluded") || t("admin.planDocuments") || "Documents Included"}
+                        </label>
+                        <Input
+                          type="number"
+                          value={editPlan.documents}
+                          onChange={(e) => setEditPlan({ ...editPlan, documents: Number(e.target.value) })}
+                        />
                       </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={!!editPlan.popular}
+                        onChange={(e) => setEditPlan({ ...editPlan, popular: e.target.checked })}
+                        id={`edit-popular-${plan.id}`}
+                        className="rounded border-border"
+                      />
+                      <label htmlFor={`edit-popular-${plan.id}`} className="text-sm font-medium cursor-pointer">
+                        {t("admin.planPopular") || "Mark as most popular"}
+                      </label>
                     </div>
                     <div className="flex gap-2">
-                      <Button onClick={() => updateMutation.mutate({ id: plan.id, data: editPlan })} className="gradient-primary" disabled={updateMutation.isPending}>
-                        Save
+                      <Button
+                        onClick={() => updateMutation.mutate({ id: plan.id, data: editPlan })}
+                        className="gradient-primary"
+                        disabled={updateMutation.isPending}
+                      >
+                        {t("common.save") || "Save"}
                       </Button>
                       <Button variant="outline" onClick={() => setEditingId(null)}>
-                        Cancel
+                        {t("common.cancel") || "Cancel"}
                       </Button>
                     </div>
                   </div>
                 ) : (
-                  <div className="flex justify-between items-start">
+                  <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
                     <div>
-                      <h3 className="font-semibold">{typeof plan.name === "string" ? plan.name : plan.name?.en}</h3>
-                      <p className="text-sm text-muted-foreground">${plan.price} • {plan.documents} documents {plan.popular && "• Most Popular"}</p>
+                      <h3 className="font-semibold text-foreground">
+                        {typeof plan.name === "string" ? plan.name : lt(plan.name)}
+                      </h3>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        ${plan.price} • {plan.documents} {t("admin.documentsCount", { count: plan.documents })}
+                        {plan.popular && ` • ${t("common.mostPopular") || "Most Popular"}`}
+                      </p>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 self-end sm:self-auto">
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => {
                           setEditingId(plan.id);
-                          setEditPlan(plan);
+                          setEditPlan({
+                            ...plan,
+                            name: typeof plan.name === "string" ? { en: plan.name, ru: plan.name, kz: plan.name } : plan.name,
+                          });
                         }}
                       >
                         <Edit2 className="h-4 w-4" />
@@ -203,7 +288,9 @@ export default function AdminPricing() {
                         variant="destructive"
                         size="sm"
                         onClick={() => {
-                          if (confirm("Are you sure?")) deleteMutation.mutate(plan.id);
+                          if (confirm(t("admin.confirmDeletePlan") || "Are you sure you want to delete this plan?")) {
+                            deleteMutation.mutate(plan.id);
+                          }
                         }}
                         disabled={deleteMutation.isPending}
                       >

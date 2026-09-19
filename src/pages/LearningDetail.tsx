@@ -1,12 +1,19 @@
-import { useParams, Navigate } from "react-router-dom";
-import { useEffect, useState, useRef } from "react";
+import { useParams, Navigate, useNavigate, Link } from "react-router-dom";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { PageLayout } from "@/components/PageLayout";
-import { api, type LearningContent, downloadAuthenticatedFile } from "@/lib/api";
+import {
+  api,
+  type LearningContent,
+  type UserLearningProgress,
+  downloadAuthenticatedFile,
+} from "@/lib/api";
 import { useLocale } from "@/hooks/use-locale";
 import { DynamicDocumentViewer, type ViewerFileItem } from "@/components/DynamicDocumentViewer";
+import { LessonQuiz } from "@/components/LessonQuiz";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   FileText,
   Image as ImageIcon,
@@ -17,6 +24,11 @@ import {
   X,
   CheckCircle2,
   File,
+  Lock,
+  ArrowRight,
+  ArrowLeft,
+  BookOpen,
+  Check,
 } from "lucide-react";
 
 interface LearningFile {
@@ -27,12 +39,16 @@ interface LearningFile {
 
 export default function LearningDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { t } = useTranslation();
   const { lt } = useLocale();
 
   const [content, setContent] = useState<LearningContent | null>(null);
+  const [allLessons, setAllLessons] = useState<LearningContent[]>([]);
+  const [userProgress, setUserProgress] = useState<UserLearningProgress | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [markingComplete, setMarkingComplete] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const fileRef = useRef<HTMLInputElement | null>(null);
@@ -50,16 +66,70 @@ export default function LearningDetail() {
     setViewerOpen(true);
   };
 
-  useEffect(() => {
+  const fetchProgress = useCallback(async () => {
+    try {
+      const prog = await api.learning.getProgress();
+      setUserProgress(prog);
+    } catch {
+      setUserProgress(null);
+    }
+  }, []);
+
+  const fetchContentAndList = useCallback(async () => {
     if (!id) return;
-    api.learning
-      .get(id)
-      .then((res) => setContent(res))
-      .catch(() => setContent(null))
-      .finally(() => setLoading(false));
+    try {
+      setLoading(true);
+      const [contentData, listData] = await Promise.all([
+        api.learning.get(id),
+        api.learning.list({ limit: "100" }),
+      ]);
+      setContent(contentData);
+      setAllLessons(listData.data || []);
+    } catch (err) {
+      console.error(err);
+      setContent(null);
+    } finally {
+      setLoading(false);
+    }
   }, [id]);
 
+  useEffect(() => {
+    fetchContentAndList();
+    fetchProgress();
+  }, [fetchContentAndList, fetchProgress]);
+
   if (!id) return <Navigate to="/learn" replace />;
+
+  const currentIndex = allLessons.findIndex((l) => l.id === id);
+  const prevLesson = currentIndex > 0 ? allLessons[currentIndex - 1] : null;
+  const nextLesson =
+    currentIndex >= 0 && currentIndex < allLessons.length - 1
+      ? allLessons[currentIndex + 1]
+      : null;
+
+  const hasTest = Boolean(content?.test && content.test.questions && content.test.questions.length > 0);
+  const testResult = id && userProgress?.testResults ? userProgress.testResults[id] : null;
+  const isTestPassed = Boolean(testResult?.passed);
+  const isLessonCompleted = Boolean(
+    (id && userProgress?.completedLessons?.includes(id)) ||
+    content?.completed ||
+    isTestPassed
+  );
+  const canAdvanceToNext = !hasTest || isTestPassed;
+
+  const handleMarkComplete = async () => {
+    if (!id) return;
+    try {
+      setMarkingComplete(true);
+      await api.learning.markComplete(id);
+      toast.success(t("quiz.lessonCompleted") || "Lesson completed!");
+      fetchProgress();
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to mark as completed");
+    } finally {
+      setMarkingComplete(false);
+    }
+  };
 
   const handleFilesAdded = (files: FileList | null) => {
     if (!files || files.length === 0) return;
@@ -172,7 +242,7 @@ export default function LearningDetail() {
     return null;
   };
 
-  const renderFileItem = (file: LearningFile) => {
+  const renderFileItem = (file: LearningFile, index: number) => {
     const isPdf = file.mimeType === "application/pdf";
     const isImage = file.mimeType?.startsWith("image");
 
@@ -184,7 +254,7 @@ export default function LearningDetail() {
 
     return (
       <div
-        key={file.url}
+        key={file.url + index}
         className="flex items-center justify-between p-3 border border-border/80 rounded-xl hover:bg-muted/40 transition-colors"
       >
         <button
@@ -229,7 +299,7 @@ export default function LearningDetail() {
 
   return (
     <PageLayout>
-      <div className="max-w-3xl mx-auto space-y-6">
+      <div className="max-w-3xl mx-auto space-y-7">
         {loading ? (
           <div className="text-center py-16">
             <div className="w-8 h-8 rounded-full border-2 border-primary/20 border-t-primary animate-spin mx-auto mb-3" />
@@ -242,7 +312,23 @@ export default function LearningDetail() {
         ) : (
           <>
             <div>
-              <h1 className="font-display text-3xl font-bold mb-2 text-foreground">{lt(content.title)}</h1>
+              <div className="flex items-center gap-2 mb-2 flex-wrap">
+                <Badge variant="secondary" className="text-xs">
+                  {lt(content.topic)}
+                </Badge>
+                {content.duration && (
+                  <span className="text-xs text-muted-foreground">• {content.duration}</span>
+                )}
+                {isLessonCompleted && (
+                  <Badge className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs border-0 flex items-center gap-1">
+                    <CheckCircle2 className="h-3 w-3" />
+                    {t("learning.completed")}
+                  </Badge>
+                )}
+              </div>
+              <h1 className="font-display text-2xl sm:text-3xl font-bold mb-2 text-foreground">
+                {lt(content.title)}
+              </h1>
               <p className="text-muted-foreground">{lt(content.description)}</p>
             </div>
 
@@ -251,11 +337,117 @@ export default function LearningDetail() {
 
             {/* Supporting Files */}
             {content.files && content.files.length > 0 && (
-              <div>
-                <h2 className="text-lg font-semibold mb-3 text-foreground">{t("learning.supportingMaterials")}</h2>
-                <div className="space-y-2">{content.files.map(renderFileItem)}</div>
+              <div className="space-y-3">
+                <h2 className="text-lg font-semibold text-foreground">
+                  {t("learning.supportingMaterials")}
+                </h2>
+                <div className="space-y-2">
+                  {content.files.map((file, idx) => renderFileItem(file, idx))}
+                </div>
               </div>
             )}
+
+            {/* Assessment & Lesson Progression Card */}
+            <div className="pt-2">
+              {hasTest && content.test ? (
+                <LessonQuiz
+                  contentId={content.id}
+                  test={content.test}
+                  nextLessonId={nextLesson?.id}
+                  previousResult={testResult}
+                  onCompleted={fetchProgress}
+                />
+              ) : (
+                <div className="p-6 rounded-2xl border border-border/70 bg-gradient-to-br from-card to-muted/20 shadow-sm space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="flex items-start gap-3.5">
+                      <div
+                        className={`h-11 w-11 rounded-xl flex items-center justify-center shrink-0 ${
+                          isLessonCompleted
+                            ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                            : "bg-primary/10 text-primary"
+                        }`}
+                      >
+                        {isLessonCompleted ? (
+                          <CheckCircle2 className="h-6 w-6" />
+                        ) : (
+                          <BookOpen className="h-6 w-6" />
+                        )}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h3 className="font-display font-bold text-lg text-foreground">
+                            {isLessonCompleted
+                              ? t("quiz.lessonCompleted")
+                              : t("quiz.knowledgeCheck")}
+                          </h3>
+                          <Badge
+                            variant={isLessonCompleted ? "default" : "outline"}
+                            className={
+                              isLessonCompleted
+                                ? "bg-emerald-600 text-white text-xs border-0"
+                                : "text-xs"
+                            }
+                          >
+                            {isLessonCompleted
+                              ? `✅ ${t("learning.completed")}`
+                              : t("quiz.testOptionalNotice")}
+                          </Badge>
+                        </div>
+                        <p className="text-xs sm:text-sm text-muted-foreground mt-1 leading-relaxed">
+                          {isLessonCompleted
+                            ? t("quiz.completedNoticeDesc")
+                            : t("quiz.noTestNoticeDesc")}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 shrink-0">
+                      {!isLessonCompleted && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={handleMarkComplete}
+                          disabled={markingComplete}
+                          className="text-xs gap-1.5 h-9"
+                        >
+                          <Check className="h-4 w-4" />
+                          {markingComplete
+                            ? t("common.saving") || "Saving..."
+                            : t("quiz.markCompleteAndNext")}
+                        </Button>
+                      )}
+
+                      {nextLesson ? (
+                        <Button
+                          type="button"
+                          size="sm"
+                          onClick={() => {
+                            navigate(`/learn/${nextLesson.id}`);
+                            window.scrollTo({ top: 0, behavior: "smooth" });
+                          }}
+                          className="gradient-primary text-primary-foreground text-xs gap-2 h-9 font-semibold shadow-sm"
+                        >
+                          {t("quiz.nextLesson")}
+                          <ArrowRight className="h-4 w-4" />
+                        </Button>
+                      ) : (
+                        <Button
+                          type="button"
+                          size="sm"
+                          onClick={() => navigate("/learn")}
+                          variant="outline"
+                          className="text-xs gap-2 h-9"
+                        >
+                          {t("quiz.backToLessons")}
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* Divider */}
             <div className="border-t border-border/60" />
@@ -263,7 +455,9 @@ export default function LearningDetail() {
             {/* Submission Form */}
             <div className="space-y-4">
               <div>
-                <h2 className="text-xl font-bold text-foreground mb-1">{t("learning.submitWork")}</h2>
+                <h2 className="text-xl font-bold text-foreground mb-1">
+                  {t("learning.submitWork")}
+                </h2>
                 <p className="text-sm text-muted-foreground">{t("learning.uploadPrompt")}</p>
               </div>
 
@@ -333,7 +527,9 @@ export default function LearningDetail() {
                         >
                           <div className="flex items-center gap-2.5 truncate">
                             <File className="h-4 w-4 text-primary shrink-0" />
-                            <span className="font-medium truncate text-foreground">{file.name}</span>
+                            <span className="font-medium truncate text-foreground">
+                              {file.name}
+                            </span>
                             <span className="text-muted-foreground shrink-0">
                               ({formatFileSize(file.size)})
                             </span>
@@ -370,6 +566,55 @@ export default function LearningDetail() {
                   )}
                 </Button>
               </form>
+            </div>
+
+            {/* Bottom Lesson Navigation (Prev / Next) */}
+            <div className="pt-6 border-t border-border/60 flex items-center justify-between gap-4">
+              {prevLesson ? (
+                <Link
+                  to={`/learn/${prevLesson.id}`}
+                  className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground hover:text-foreground transition-colors group"
+                >
+                  <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
+                  <span className="truncate max-w-[160px] sm:max-w-[240px]">
+                    {lt(prevLesson.title)}
+                  </span>
+                </Link>
+              ) : (
+                <div />
+              )}
+
+              {nextLesson ? (
+                canAdvanceToNext ? (
+                  <Link
+                    to={`/learn/${nextLesson.id}`}
+                    className="flex items-center gap-2 text-xs sm:text-sm font-medium text-primary hover:underline group ml-auto"
+                  >
+                    <span className="truncate max-w-[160px] sm:max-w-[240px]">
+                      {lt(nextLesson.title)}
+                    </span>
+                    <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                  </Link>
+                ) : (
+                  <div
+                    className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground/60 cursor-not-allowed ml-auto"
+                    title={t("quiz.lessonLockedTooltip")}
+                  >
+                    <span className="truncate max-w-[160px] sm:max-w-[240px]">
+                      {lt(nextLesson.title)}
+                    </span>
+                    <Lock className="h-3.5 w-3.5 text-amber-500" />
+                  </div>
+                )
+              ) : (
+                <Link
+                  to="/learn"
+                  className="flex items-center gap-2 text-xs sm:text-sm font-medium text-primary hover:underline ml-auto"
+                >
+                  <span>{t("quiz.backToLessons")}</span>
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              )}
             </div>
           </>
         )}
